@@ -1,0 +1,8 @@
+
+UPWORK_BASE_URL:str = "https://www.upwork.com"
+UPWORK_LOGIN_URL:str = f"{UPWORK_BASE_URL}/ab/account-security/login"
+UPWORK_SIGNUP_URL:str = f"{UPWORK_BASE_URL}/nx/signup/"
+UPWORK_JOBS_SEARCH_URL:str = f"{UPWORK_BASE_URL}/nx/search/jobs/?from_recent_search=true&per_page=20&q=scraping"
+UPWORK_PROPOSALS_URL:str = f"{UPWORK_BASE_URL}/nx/proposals/"
+UPWORK_DASHBOARD_URL:str = f"{UPWORK_BASE_URL}/nx/find-work/best-matches"
+IP_CHECK_URL:str = "https://ip.smartproxy.com/ip"
