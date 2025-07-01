@@ -1,29 +1,15 @@
 import logging
 import random
-from enum import Enum
 
 from patchright.async_api import Page
 
-from browser.proxy_validation import validate_proxy_ip
-from browser.utils import dismiss_cookies_popup, handle_captcha
-from config import constants
-from config.settings import settings
-from utils.credential_provider import get_credentials
-from utils.env import get_env
-from utils.proxy import get_proxy
+from browser import dismiss_cookies_popup, handle_captcha, validate_proxy_ip
+from config import constants, bot_settings
+from utils import get_credentials, get_env, get_proxy
+
+from .selectors import UpworkLoginSelectors
 
 logger = logging.getLogger(__name__)
-
-
-class Selectors(Enum):
-    USERNAME = "#login_username"
-    PASSWORD = "#login_password"
-    CONTINUE_BUTTON = "#login_password_continue"
-    REMEMBER_ME = 'span[data-test="checkbox-input"]'
-    LOGIN_BUTTON = "#login_control_continue"
-    SECURITY_ANSWER = "#login_answer"
-    JOBS_FEED = 'li[data-cy="user-menu"]'
-    CAPTCHA_RESPONSE_INPUT = 'input[name="cf-turnstile-response"]'
 
 
 class UpworkLoginManager:
@@ -31,6 +17,7 @@ class UpworkLoginManager:
     def __init__(self, page:Page):
         """Initialize with a SeleniumBase browser instance."""
         self.page = page
+        self.selectors = UpworkLoginSelectors
     
     async def wait_random(self, min_sec:float=3.3, max_sec:float=6.7) -> None:
         """
@@ -42,8 +29,8 @@ class UpworkLoginManager:
         """Handles Upwork security question if prompted."""
         try:
             logger.info("Attempting to answer security question...")
-            await self.page.fill(Selectors.SECURITY_ANSWER.value, sec_answer)
-            await self.page.click(Selectors.LOGIN_BUTTON.value)
+            await self.page.fill(self.selectors.SECURITY_ANSWER_INPUT, sec_answer)
+            await self.page.click(self.selectors.LOGIN_SUBMIT_BUTTON)
             logger.info("Security answer submitted.")
             return True
         except Exception as e:
@@ -56,7 +43,7 @@ class UpworkLoginManager:
         try:
             logger.info("Checking for login success...")
             await self.wait_random(5.79, 9.91)  # Wait for the page to load
-            is_visible = await self.page.locator(Selectors.JOBS_FEED.value).is_visible()
+            is_visible = await self.page.locator(self.selectors.USER_MENU_LIST_ITEM).is_visible()
 
             if is_visible:
                 logger.info("Login successful")
@@ -91,18 +78,18 @@ class UpworkLoginManager:
         try:
             logger.info("Running login workflow...")
             # Username entry
-            await self.page.fill(Selectors.USERNAME.value, email)
-            await self.page.click(Selectors.CONTINUE_BUTTON.value)
+            await self.page.fill(self.selectors.USERNAME_INPUT, email)
+            await self.page.click(self.selectors.CONTINUE_TO_PASSWORD_BUTTON)
             await self.wait_random(3.9, 5.47)
             
             # Password entry
-            await self.page.fill(Selectors.PASSWORD.value, password)
-            await self.page.click(Selectors.REMEMBER_ME.value)
-            await self.page.click(Selectors.LOGIN_BUTTON.value)
+            await self.page.fill(self.selectors.PASSWORD_INPUT, password)
+            await self.page.click(self.selectors.REMEMBER_ME_CHECKBOX)
+            await self.page.click(self.selectors.LOGIN_SUBMIT_BUTTON)
             await self.wait_random(3.9, 5.47)
 
             # Security question handling
-            if await self.page.locator(Selectors.SECURITY_ANSWER.value).is_visible():
+            if await self.page.locator(self.selectors.SECURITY_ANSWER_INPUT).is_visible():
                 logger.info("Security question detected")
                 await self.handle_security_question(sec_answer)
 
@@ -115,7 +102,7 @@ class UpworkLoginManager:
     async def login(self, email: str, password: str, sec_answer: str) -> bool:
         """Standard Login Procedure"""
         try:
-            for attempt in range(1, settings.MAX_RETRY+1):
+            for attempt in range(1, bot_settings.MAX_RETRY+1):
                 # Navigate to login page
                 await self.page.goto(constants.UPWORK_LOGIN_URL)
                 if not await handle_captcha(self.page):
@@ -174,14 +161,15 @@ class UpworkLoginManager:
             return False
 
 if __name__ == '__main__':
+    import asyncio
+
     from browser.manager import PatchrightBrowser
     from config.logger_config import configure_logging
     from utils.proxy import get_proxy
-    import asyncio
 
     configure_logging()
 
-    name = "naman"
+    name = "subham"
     proxy = get_proxy(name)
 
     async def main():
@@ -194,6 +182,5 @@ if __name__ == '__main__':
                 print("Logged into account successfully.")
             else:
                 print("Failed to Login into account.")
-            # driver.cdp.sleep(100)
     
     asyncio.run(main())

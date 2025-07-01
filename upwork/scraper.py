@@ -1,25 +1,19 @@
 import json
 import logging
 import random
-from enum import Enum
 
 from bs4 import BeautifulSoup
 from patchright.async_api import Page
 
 from browser.utils import dismiss_cookies_popup, handle_captcha
-from config.paths import paths
-from config.settings import settings
-from config import constants
+from config import paths, bot_settings, constants
 from upwork.parser import JobHtmlParser
+from upwork.selectors import JobCardSelectors
+
 
 logger = logging.getLogger(__name__)
 
-class Selector(Enum):
-    """Enum representing different selectors used to extract job data."""
-
-    CARD_CONTAINER = ('section', {'class': 'card-list-container'})
-    JOB_CARD = ('article', {})
-    PAGE_BOTTOM = 'div.air3-card-section.d-lg-flex.justify-space-between[data-test="LazyHydrate"]'
+PAGE_BOTTOM = 'div.air3-card-section.d-lg-flex.justify-space-between[data-test="LazyHydrate"]'
 
 
 class JobScraper:
@@ -43,15 +37,16 @@ class JobScraper:
     async def _fetch_page(self, url: str) -> str | None:
         """Fetch HTML page source from the given URL with retry logic."""
 
-        for attempt in range(1, settings.MAX_RETRY+1):
+        for attempt in range(1, bot_settings.MAX_RETRY+1):
             try:
+                logger.info(f"Opening page: {url}")
                 await self.page.goto(url, wait_until="domcontentloaded")
 
                 if await handle_captcha(self.page):
 
                     await dismiss_cookies_popup(self.page)
 
-                    await self.page.locator(Selector.PAGE_BOTTOM.value).scroll_into_view_if_needed()
+                    await self.page.locator(PAGE_BOTTOM).scroll_into_view_if_needed()
                     await self.page.wait_for_timeout(random.uniform(3500, 5500))
 
                     page_source = await self.page.content()
@@ -77,8 +72,8 @@ class JobScraper:
 
         logger.info("Parsing job listings from page...")
         soup = BeautifulSoup(page_content, 'lxml')
-        card_container = soup.find(*Selector.CARD_CONTAINER.value)
-        cards = card_container.find_all(*Selector.JOB_CARD.value) if card_container else []
+        card_container = soup.find(*JobCardSelectors.CARD_CONTAINER)
+        cards = card_container.find_all(*JobCardSelectors.JOB_CARD) if card_container else []
 
         if not cards:
             logger.error("No job cards found on the page.")

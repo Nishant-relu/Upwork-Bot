@@ -53,4 +53,4 @@ class Settings:
     PROXY_PASSWORD: str = get_env("BRIGHDATA_PASSWORD")
 
 
-settings = Settings()
+bot_settings = Settings()

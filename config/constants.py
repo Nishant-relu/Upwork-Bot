@@ -6,3 +6,4 @@ UPWORK_JOBS_SEARCH_URL:str = f"{UPWORK_BASE_URL}/nx/search/jobs/?from_recent_sea
 UPWORK_PROPOSALS_URL:str = f"{UPWORK_BASE_URL}/nx/proposals/"
 UPWORK_DASHBOARD_URL:str = f"{UPWORK_BASE_URL}/nx/find-work/best-matches"
 IP_CHECK_URL:str = "https://ip.smartproxy.com/ip"
+PROPOSAL_API_URL = "http://147.93.116.17:8000/generate-response"

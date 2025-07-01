@@ -2,7 +2,7 @@ import logging
 import random
 from patchright.async_api import Error, Page, TimeoutError
 from browser.anti_captcha import AntiCloudflare
-from config.settings import settings
+from config import bot_settings
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ async def handle_captcha(page:Page, wait_time_range=(3.2, 5.5)) -> bool:
 
         captcha_handler = AntiCloudflare(page)
 
-        for attempt in range(1, settings.MAX_RETRY+1):
+        for attempt in range(1, bot_settings.MAX_RETRY+1):
             if await captcha_handler.check():
                 logger.info(f"[Attempt {attempt}] Captcha detected. Attempting to bypass.")
                 captcha_handler.bypass()
@@ -58,7 +58,7 @@ async def handle_captcha(page:Page, wait_time_range=(3.2, 5.5)) -> bool:
                 logger.info("No captcha found.")
                 return True
         
-        logger.error(f"Captcha still present after {settings.MAX_RETRY} attempts.")
+        logger.error(f"Captcha still present after {bot_settings.MAX_RETRY} attempts.")
     
     except Exception as e:
         logger.error(f"Got unexpected exception while handling captcha | {e}", exc_info=True)

@@ -23,8 +23,14 @@ class PathConfig:
         self.FILTERED_JOBS_DIR = self.DATA_DIR / "filtered_jobs"
         self.ATTACHMENTS_DIR = self.DATA_DIR / "attachments"
 
+        # File path
+        self.APPLIED_JOBS_FILE = self.APPLIED_JOBS_DIR / 'job_data.txt'
+        self.FAILED_JOB_FILE = self.FAILED_JOB_DIR / "failed_jobs.txt"
+
         # Create all necessary directories and files       
         self._create_directories()
+        self._create_files()
+
     
     def _create_directories(self) -> None:
         """
@@ -44,6 +50,16 @@ class PathConfig:
 
         for dir in dirs:
             dir.mkdir(parents=True, exist_ok=True)
+    
+    def _create_files(self) -> None:
+        """Ensure essential files exist."""
+        file_paths = [
+            self.APPLIED_JOBS_FILE, 
+            self.FAILED_JOB_FILE
+        ]
+
+        for file_path in file_paths:
+            file_path.touch(exist_ok=True)
 
 
 paths:PathConfig = PathConfig()

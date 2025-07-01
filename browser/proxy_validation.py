@@ -10,6 +10,7 @@ async def get_proxy_ip(page:Page, timeout: int = 15) -> str | None:
     Fetch the current public IP address as seen by the browser.
     """
     try:
+        # await page.wait_for_timeout(timeout=timeout*100)
         await page.goto(IP_CHECK_URL, wait_until="domcontentloaded", timeout=timeout * 1000)
         ip: str | None = await page.locator("body").text_content()
 

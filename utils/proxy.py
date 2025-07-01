@@ -3,7 +3,6 @@ import traceback
 
 import requests
 
-from config.settings import settings
 from utils.env import get_env
 
 logger = logging.getLogger(__name__)
@@ -14,11 +13,13 @@ def get_proxy(name:str) -> dict|None:
     Get proxy settings based on the user's name.
     """
     try:
+        # added here to avoid circular import 
+        from config import bot_settings
 
-        host = settings.PROXY_HOST
-        port = settings.PROXY_PORT
-        password = settings.PROXY_PASSWORD
-        user = settings.PROXY_USER
+        host = bot_settings.PROXY_HOST
+        port = bot_settings.PROXY_PORT
+        password = bot_settings.PROXY_PASSWORD
+        user = bot_settings.PROXY_USER
         ip_env_var = f"{name.upper()}_IP"
 
         if not all([host, port, password, user]):
