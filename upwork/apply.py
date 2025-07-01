@@ -313,8 +313,8 @@ class UpworkJobApplication:
             submit_selector = 'div.fe-apply-footer-controls > button:first-of-type'
             submit_button = self.page.locator(submit_selector)
             await submit_button.scroll_into_view_if_needed()
-            # await submit_button.click()
-            # await self.page.wait_for_timeout(random.uniform(7.7, 9.93)*1000)
+            await submit_button.click()
+            await self.page.wait_for_timeout(random.uniform(7.7, 9.93)*1000)
 
             return await self.verify_apply()
         except Exception as e:
