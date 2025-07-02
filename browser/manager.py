@@ -20,6 +20,7 @@ class PatchrightBrowser:
             headless=False,
             no_viewport=True,
             proxy=self.proxy,
+            args=["--start-maximized"]
         )
         return self.context
 
