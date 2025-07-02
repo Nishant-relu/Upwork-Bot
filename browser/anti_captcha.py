@@ -33,7 +33,8 @@ class AntiCloudflare:
             time.sleep(duration / steps)
     
     def bypass(self):
-        target_x, target_y = random.randint(525, 545), random.randint(330,350)
+        # target_x, target_y = random.randint(525, 545), random.randint(330,350)
+        target_x, target_y = random.randint(410, 430), random.randint(320,340)
         start_x, start_y = self.mouse.position
         self.human_like_move(start_x, start_y, target_x, target_y, duration=1.5)
         self.mouse.click(Button.left)
