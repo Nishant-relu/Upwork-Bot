@@ -91,7 +91,7 @@ async def attempt_job_application(
                 return True
             else:
                 wait_time = random.randint(*bot_settings.RETRY_INTERVAL_MINUTE)
-                logger.info(f"[{user}] Failed attempt {retry+1}, retrying in {wait_time} minutes.")
+                logger.info(f"[{user}] Failed attempt {retry}, retrying in {wait_time} minutes.")
                 time.sleep(wait_time*60)
 
         await save_url(link, f"Failed to apply for job using {user}", debug=True)
@@ -127,6 +127,10 @@ async def attempt_job_application(
 
 async def process_jobs_for_user(user: str, jobs:list[dict]) -> None:
     """ Applies to a list of jobs for a given user. """
+
+    if not jobs:
+        logger.info(f"No jobs to apply for user: {user}")
+        return
 
     proxy = get_proxy(user)
 
