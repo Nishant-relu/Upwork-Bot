@@ -15,6 +15,7 @@ class PathConfig:
         self.USER_PROFILE_DIR = self.BASE_DIR / "user_profiles"
         self.DATA_DIR = self.BASE_DIR / "data"
 
+        self.COOKIES_DIR = self.DATA_DIR / "cookies"
         self.APPLIED_JOBS_DIR = self.DATA_DIR / "applied_jobs"
         self.FAILED_JOB_DIR = self.DATA_DIR / "failed_jobs"
         self.STATS_DIR = self.DATA_DIR / "stats"
@@ -45,6 +46,7 @@ class PathConfig:
             self.FILTERED_JOBS_DIR, 
             self.SCRAPED_JOBS_DIR,
             self.ATTACHMENTS_DIR,
+            self.COOKIES_DIR,
             self.USER_PROFILE_DIR
         ]
 

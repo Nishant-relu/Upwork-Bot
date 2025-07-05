@@ -182,12 +182,16 @@ class UpworkJobApplication:
         """
         try:
             proposal_type = bot_settings.PROPOSAL_TYPE.value.upper()
+
+            logger.info(f"Setting proposal type to {proposal_type}")
             proposal_type_xpath = ProposalTypeXPath[proposal_type].value
+            await self.page.wait_for_timeout(random.uniform(5.7, 8.9)*1000)
 
             checkbox = self.page.locator(proposal_type_xpath)
             if await checkbox.is_visible(timeout=15000):
+                logger.info("Found Check box with proposals.")
                 await checkbox.wait_for(timeout=10000)
-                await checkbox.click(timeout=10000)
+                await checkbox.click(button="left", timeout=10000)
                 await self.page.wait_for_timeout(random.uniform(1.7, 2.93)*1000)
                 logger.info(f"Proposal type '{proposal_type}' selected.")
             else:
@@ -489,9 +493,9 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "kishan"
+    name = "naman"
     proxy = get_proxy(name)
-    url = "https://www.upwork.com/nx/proposals/job/~021939857261995069783/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~021941429189394944676/apply/"
 
     async def main():
         async with PatchrightBrowser(profile_name=name, proxy=proxy) as context:

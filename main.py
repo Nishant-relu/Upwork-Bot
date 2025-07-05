@@ -138,7 +138,7 @@ async def process_jobs_for_user(user: str, jobs:list[dict]) -> None:
         async with PatchrightBrowser(profile_name=user, proxy=proxy) as context:
             logger.info(f"Processing jobs for user: {user}")
 
-            page =context.pages[0]
+            page = await context.new_page()
             login_manager = UpworkLoginManager(page)
             await login_manager.validate_or_login(user)
 
@@ -164,7 +164,7 @@ async def scrape_and_filter_jobs(user: str = "subham") -> list[dict]:
     proxy = get_proxy(user)
     try:
         async with PatchrightBrowser(profile_name=user, proxy=proxy) as context:
-            page = context.pages[0]
+            page = await context.new_page()
             scraper = JobScraper(page)
             all_jobs = await scraper.scrape_jobs()
 

@@ -49,7 +49,7 @@ async def handle_captcha(page:Page, wait_time_range=(3.2, 5.5)) -> bool:
         for attempt in range(1, bot_settings.MAX_RETRY+1):
             if await captcha_handler.check():
                 logger.info(f"[Attempt {attempt}] Captcha detected. Attempting to bypass.")
-                captcha_handler.bypass()
+                await captcha_handler.bypass()
 
                 sleep_duration = random.uniform(*wait_time_range) + attempt
                 logger.info(f"Sleeping for {sleep_duration:.2f} seconds after captcha attempt.")

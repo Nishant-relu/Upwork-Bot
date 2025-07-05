@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     async def main():
         async with PatchrightBrowser(profile_name=name, proxy=proxy) as context:
-            page = context.pages[0]
+            page = await context.new_page()
             scraper = JobScraper(page)
             jobs = await scraper.scrape_jobs()
         

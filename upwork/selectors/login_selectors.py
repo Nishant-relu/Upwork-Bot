@@ -17,3 +17,4 @@ class UpworkLoginSelectors:
 
     # Post-login Element (used for login success detection)
     USER_MENU_LIST_ITEM = 'li[data-cy="user-menu"]'
+    USER_PROFILE = 'section[data-test="my-profile"]'

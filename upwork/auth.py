@@ -4,7 +4,7 @@ import random
 from patchright.async_api import Page
 
 from browser import dismiss_cookies_popup, handle_captcha, validate_proxy_ip
-from config import constants, bot_settings
+from config import constants, bot_settings, paths
 from utils import get_credentials, get_env, get_proxy
 
 from .selectors import UpworkLoginSelectors
@@ -23,7 +23,7 @@ class UpworkLoginManager:
         """
         Wait for randomly.
         """
-        await self.page.wait_for_timeout(random.uniform(min_sec * 1000, max_sec * 1000))
+        await self.page.wait_for_timeout(random.uniform(min_sec, max_sec)*1000)
 
     async def handle_security_question(self, sec_answer: str) -> bool:
         """Handles Upwork security question if prompted."""
@@ -43,12 +43,13 @@ class UpworkLoginManager:
         try:
             logger.info("Checking for login success...")
             await self.wait_random(5.79, 9.91)  # Wait for the page to load
-            is_visible = await self.page.locator(self.selectors.USER_MENU_LIST_ITEM).is_visible()
+            user_menu = await self.page.locator(self.selectors.USER_MENU_LIST_ITEM).is_visible()
+            user_profile = await self.page.locator(self.selectors.USER_PROFILE).is_visible()
 
-            if is_visible:
+            if user_menu or user_profile:
                 logger.info("Login successful")
                 return True
-
+            await self.page.screenshot(type="png", path=paths.SCREENSHOTS_DIR/"login_failed.png", full_page=True)
             logger.warning("Jobs feed not visible. Login might have failed.")
             return False
         except Exception as e:
@@ -131,7 +132,7 @@ class UpworkLoginManager:
 
             # Verify proxy connection
             expected_ip = get_env(f"{account_name.upper()}_IP").strip()
-            await validate_proxy_ip(self.page, expected_ip)
+            # await validate_proxy_ip(self.page, expected_ip)
 
             #check if session still active
             if await self.check_session_persistence():
@@ -169,11 +170,11 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "subham"
+    name = "muktesh"
     proxy = get_proxy(name)
 
     async def main():
-        async with PatchrightBrowser(profile_name=name, proxy=proxy) as context:
+        async with PatchrightBrowser(profile_name=name) as context:
             page = context.pages[0]
             manager = UpworkLoginManager(page)
             logged_in = await manager.validate_or_login(name)

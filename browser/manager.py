@@ -18,9 +18,8 @@ class PatchrightBrowser:
             user_data_dir=user_data_dir,
             channel="chrome",
             headless=False,
-            no_viewport=True,
             proxy=self.proxy,
-            args=["--start-maximized"]
+            no_viewport=True
         )
         return self.context
 
