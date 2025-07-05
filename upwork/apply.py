@@ -366,7 +366,7 @@ class UpworkJobApplication:
                 await self.page.wait_for_timeout(random.uniform(1.7, 2.93)*1000)
 
                 selected_value_selector = 'div[aria-labelledby="duration-label"] span'
-                if self.verify_dropdown_value(selected_value_selector, "Less than 1 month"):
+                if await self.verify_dropdown_value(selected_value_selector, "Less than 1 month"):
                     break
 
             # Fill cover letter
