@@ -9,6 +9,7 @@ from browser.utils import dismiss_cookies_popup, handle_captcha
 from config import paths, bot_settings, constants
 from upwork.parser import JobHtmlParser
 from upwork.selectors import JobCardSelectors
+from utils import save_scraped_jobs
 
 
 logger = logging.getLogger(__name__)
@@ -87,11 +88,13 @@ class JobScraper:
         
         logger.info(f"Scraped Jobs : {jobs}")
         await self.save_to_json(jobs, "scraped_jobs_data.json")
+        await save_scraped_jobs(jobs)
 
         return jobs
 
 
 if __name__ == "__main__":
+    from patchright.async_api import async_playwright
     from browser.manager import PatchrightBrowser
     from config.logger_config import configure_logging
     from utils.proxy import get_proxy
@@ -103,8 +106,11 @@ if __name__ == "__main__":
     proxy = get_proxy(name)
 
     async def main():
-        async with PatchrightBrowser(profile_name=name, proxy=proxy) as context:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(channel='chrome',headless=False)
+            context = await browser.new_context()
             page = await context.new_page()
+            
             scraper = JobScraper(page)
             jobs = await scraper.scrape_jobs()
         

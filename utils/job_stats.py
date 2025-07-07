@@ -132,3 +132,38 @@ async def save_job_filter_stats(counters:dict):
 
     except Exception as e:
         logger.error(f"Error while saving user stats: {e}", exc_info=True)
+
+
+async def save_scraped_jobs(jobs_data:list[dict], file_dir:Path|None=None):
+
+    try:
+        if file_dir:
+            file_path = file_dir / f"scraped_jobs_{datetime.now().date()}.json"
+        else:
+            file_path = paths.SCRAPED_JOBS_DIR / f"scraped_jobs_{datetime.now().date()}.json"
+
+        if file_path.exists():
+            try:
+                with open(file_path, 'r') as f:
+                    existing_job = json.load(f)
+            except json.JSONDecodeError:
+                logger.warning(f"JSON decode failed for {file_path}, initializing empty list.")
+                existing_job = []
+        else:
+            existing_job = []
+
+        existing_link = { job.get("link") for job in existing_job }
+        unique_job = [job for job in jobs_data if job.get("link") not in existing_link]
+
+        if unique_job:
+            updated_jobs = unique_job + existing_job
+
+            with open(file_path, 'w') as f:
+                json.dump(updated_jobs, f, indent=4)
+            
+            logger.info(f"Saved {len(unique_job)} new job(s) to {file_path}")
+        else:
+            logger.info("No new unique jobs to save.")
+    
+    except Exception as e:
+        logger.error(f"Error while saving scraped data: {e}", exc_info=True)

@@ -365,7 +365,7 @@ class JobFilter:
 
 if __name__ == '__main__':
     import asyncio
-
+    from patchright.async_api import async_playwright
     from browser import PatchrightBrowser
     from config import configure_logging
     from upwork.scraper import JobScraper
@@ -373,12 +373,15 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "kishan"
+    name = "subham"
     proxy = get_proxy(name)
     
     async def main():
-        async with PatchrightBrowser(profile_name=name, proxy=proxy) as context:
-            page = context.pages[0]
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(channel='chrome',headless=False)
+            context = await browser.new_context()
+            page = await context.new_page()
+
             scraper = JobScraper(page)
             job_data = await scraper.scrape_jobs()
             filter = JobFilter(page)
