@@ -2,10 +2,11 @@ import logging
 import random
 import time
 
-from patchright.async_api import Page
+from patchright.async_api import Page, async_playwright
 
 from browser import PatchrightBrowser
-from config import bot_settings
+from browser.context import ContextHandler
+from config import bot_settings, paths
 from upwork.apply import UpworkJobApplication
 from upwork.auth import UpworkLoginManager
 from upwork.filter import JobFilter
@@ -133,12 +134,17 @@ async def process_jobs_for_user(user: str, jobs:list[dict]) -> None:
         return
 
     proxy = get_proxy(user)
+    cookies_path = paths.COOKIES_DIR / f"{user}_cookies.json"
 
     try:
-        async with PatchrightBrowser(profile_name=user, proxy=proxy) as context:
+        async with async_playwright() as playwright:
             logger.info(f"Processing jobs for user: {user}")
 
+            browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
+            context_handler = ContextHandler(browser, cookies_path)
+            context = await context_handler.create()
             page = await context.new_page()
+
             login_manager = UpworkLoginManager(page)
             await login_manager.validate_or_login(user)
 
@@ -150,6 +156,7 @@ async def process_jobs_for_user(user: str, jobs:list[dict]) -> None:
             else:
                 logger.info(f"No jobs to apply for user: {user}")
             
+            await context_handler.destroy()
             # logger.info("Processing Invitations.")
             # await process_invitation_jobs_for_user(user, page, job_applicator)
             
@@ -162,9 +169,16 @@ async def scrape_and_filter_jobs(user: str = "subham") -> list[dict]:
     Scrape and filter jobs from Upwork using the default or given user.
     """
     proxy = get_proxy(user)
+    cookies_path = paths.COOKIES_DIR / f"{user}_cookies.json"
+    
     try:
-        async with PatchrightBrowser(profile_name=user, proxy=proxy) as context:
+        all_jobs = []
+        
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
+            context = await browser.new_context()
             page = await context.new_page()
+
             scraper = JobScraper(page)
             all_jobs = await scraper.scrape_jobs()
 
@@ -172,8 +186,17 @@ async def scrape_and_filter_jobs(user: str = "subham") -> list[dict]:
                 logger.info("No jobs scraped.")
                 return []
 
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
+            context_handler = ContextHandler(browser, cookies_path)
+            context = await context_handler.create()
+            page = await context.new_page()
+
             job_filter = JobFilter(page)
             filtered_jobs = await job_filter.filter_jobs(all_jobs)
+
+            await context_handler.destroy()
+
             return filtered_jobs or []
     except Exception as e:
         logger.error(f"Error during job scraping/filtering for user '{user}': {e}", exc_info=True)

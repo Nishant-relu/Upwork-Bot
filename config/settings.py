@@ -41,7 +41,7 @@ class Settings:
     MAX_PROPOSAL: int = 50
     SKIP_KEYWORDS: Tuple[str, ...] = ('Lead Generation',)
 
-    WAIT_TIME: Tuple[int, int] = (40, 60)
+    WAIT_TIME: Tuple[int, int] = (20, 30)
 
     PROPOSAL_TYPE: ProposalType = ProposalType.FREELANCER
     HOURLY_RATE: Type[HourlyRate] = HourlyRate

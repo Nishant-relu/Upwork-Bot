@@ -9,7 +9,12 @@ class ContextHandler:
 
     async def create(self):
         if not self._context:
-            self._context = await self._browser.new_context(storage_state=self._cookies_path)
+            if not self._cookies_path.exists():
+                cookies_path = None
+            else:
+                cookies_path = self._cookies_path
+            
+            self._context = await self._browser.new_context(storage_state=cookies_path)
         
         return self._context
     

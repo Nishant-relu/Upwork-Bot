@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class UpworkLoginManager:
     """Manages the login process for Upwork"""
     def __init__(self, page:Page):
-        """Initialize with a SeleniumBase browser instance."""
+        """Initialize with a Patchright."""
         self.page = page
         self.selectors = UpworkLoginSelectors
     
@@ -163,19 +163,25 @@ class UpworkLoginManager:
 
 if __name__ == '__main__':
     import asyncio
-
+    from patchright.async_api import async_playwright
+    from browser.context import ContextHandler
     from browser.manager import PatchrightBrowser
     from config.logger_config import configure_logging
     from utils.proxy import get_proxy
+    from config import paths
 
     configure_logging()
 
-    name = "muktesh"
+    name = "subham"
     proxy = get_proxy(name)
+    cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
 
     async def main():
-        async with PatchrightBrowser(profile_name=name) as context:
-            page = context.pages[0]
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(channel='chrome',headless=False)
+            context_handler = ContextHandler(browser, cookies_path)
+            context = await context_handler.create()
+            page = await context.new_page()
             manager = UpworkLoginManager(page)
             logged_in = await manager.validate_or_login(name)
 
@@ -183,5 +189,18 @@ if __name__ == '__main__':
                 print("Logged into account successfully.")
             else:
                 print("Failed to Login into account.")
+            
+            await context_handler.destroy()
+
+    # async def main():
+    #     async with PatchrightBrowser(profile_name=name) as context:
+    #         page = context.pages[0]
+    #         manager = UpworkLoginManager(page)
+    #         logged_in = await manager.validate_or_login(name)
+
+    #         if logged_in:
+    #             print("Logged into account successfully.")
+    #         else:
+    #             print("Failed to Login into account.")
     
     asyncio.run(main())
