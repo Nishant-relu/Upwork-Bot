@@ -83,17 +83,12 @@ async def attempt_job_application(
     logger.info(f"[{user}] Attempting to apply for job: {apply_link}")
 
     try:
-        for retry in range(1, bot_settings.MAX_RETRY+1):
-            success = await job_applicator.job_apply(apply_link, user, attachment_link, fixed_price)
-            if success:
-                logger.info(f"[{user}] Successfully applied to {apply_link} \n\n")
-                await save_url(link, f"Successfully applied for job using {user}")
-                await save_job_apply_stats(user, link, invitation_job_apply)
-                return True
-            else:
-                wait_time = random.randint(*bot_settings.RETRY_INTERVAL_MINUTE)
-                logger.info(f"[{user}] Failed attempt {retry}, retrying in {wait_time} minutes.")
-                time.sleep(wait_time*60)
+        success = await job_applicator.job_apply(apply_link, user, attachment_link, fixed_price)
+        if success:
+            logger.info(f"[{user}] Successfully applied to {apply_link} \n\n")
+            await save_url(link, f"Successfully applied for job using {user}")
+            await save_job_apply_stats(user, link, invitation_job_apply)
+            return True
 
         await save_url(link, f"Failed to apply for job using {user}", debug=True)
         logger.warning(f"[{user}] Failed to apply to {apply_link} \n\n")

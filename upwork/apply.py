@@ -456,12 +456,19 @@ class UpworkJobApplication:
             await self.set_proposal_type()
 
             job_details = await self.get_job_details()
-
             if not bool(job_details):
                 return False
             
             proposal = generate_proposal(job_details, attachment_file_path)
+            if not proposal:
+                logger.info("Failed to generate proposal. Exiting apply process.")
+                return False
 
+            relevant_job = proposal.get("relevant_job", False)
+            if not relevant_job:
+                logger.info("Job is not relevant. Exititng apply process.")
+                return False
+            
             answers = proposal.get("question_answers", {})
             cover_letter = proposal.get("response", "")
 
