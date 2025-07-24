@@ -494,21 +494,30 @@ if __name__ == '__main__':
 
     from .auth import UpworkLoginManager
 
-    from browser import PatchrightBrowser
+    from patchright.async_api import Page, async_playwright
+    from browser.context import ContextHandler
     from config import configure_logging
     from utils import get_proxy
+    from config.paths import paths
 
     configure_logging()
 
-    name = "naman"
+    name = "muktesh"
     proxy = get_proxy(name)
-    url = "https://www.upwork.com/nx/proposals/job/~021941429189394944676/apply/"
+    cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
+    url = "https://www.upwork.com/nx/proposals/job/~021948174277523571105/apply/"
 
     async def main():
-        async with PatchrightBrowser(profile_name=name, proxy=proxy) as context:
-            page = context.pages[0]
-            manager = UpworkLoginManager(page)
-            await manager.validate_or_login(account_name=name)
+        async with async_playwright() as playwright:
+            logger.info(f"Processing jobs for user: {name}")
+
+            browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
+            context_handler = ContextHandler(browser, cookies_path)
+            context = await context_handler.create()
+            page = await context.new_page()
+
+            login_manager = UpworkLoginManager(page)
+            await login_manager.validate_or_login(name)
 
             applicator = UpworkJobApplication(page)
             await applicator.job_apply(url=url, name=name)
