@@ -64,7 +64,7 @@ class UpworkJobApplication:
 
             if visible:
                 error_msg = (await error_div.text_content()) or "No message found."
-                logger.info(f"Found error message on upwork page. message: {error_msg.strip()}")
+                logger.warning(f"Found error message on upwork page. message: {error_msg.strip()}")
                  
                 logger.info("Taking screenshot ...")
                 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -79,6 +79,53 @@ class UpworkJobApplication:
             logger.error("Failed to check error message. ", exc_info=True)
             return False
     
+    async def is_disqualified_warning_active(self) -> bool:
+        """
+        Returns True only if:
+        - A qualification warning message is present on the page, AND
+        - The 'Submit a Proposal' button is present but disabled.
+
+        Returns False in all other cases.
+        """
+        try:
+            logger.info("Checking for disqualification warning and disabled submit button...")
+
+            await self.page.wait_for_timeout(random.uniform(1.67, 3.53) * 100)
+
+            warning_selector = "div.alerts div.air3-alert.air3-alert-warning.air3-alert-inline"
+            submit_btn_selector = "div.fe-apply-footer-controls > button:first-of-type"
+
+            warning_div = self.page.locator(warning_selector)
+            if not await warning_div.is_visible():
+                logger.info("No disqualification warning message found.")
+                return False
+            
+            warning_text = await warning_div.text_content() or "No message found."
+            logger.warning(f"Disqualification warning detected: {warning_text.strip()}")
+
+            submit_btn = self.page.locator(submit_btn_selector)
+            if await submit_btn.count() == 0:
+                logger.warning("Submit button not found.")
+                return False
+
+            if await submit_btn.is_enabled():
+                logger.info("Submit button is enabled despite warning. Not disqualified.")
+                return False
+            
+            logger.info("Disqualified: warning present and submit button is disabled.")
+
+            logger.info("Taking screenshot...")
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            screenshot_dir = paths.SCREENSHOTS_DIR / f"job_warning_{timestamp}.png"
+            await self.page.screenshot(path=screenshot_dir, full_page=True, timeout=30000, type="png")
+            logger.info(f"Screenshot saved at {screenshot_dir}")
+
+            return True
+
+        except Exception as e:
+            logger.error("Error during disqualification check.", exc_info=True)
+            return False
+
     async def extract_job_details(self, html:str) -> dict:
         """
         Extract job title, description, and custom questions from the HTML source.
@@ -503,6 +550,9 @@ class UpworkJobApplication:
                 return False
             
             await self.set_proposal_type()
+            
+            if await self.is_disqualified_warning_active():
+                return False
 
             job_details = await self.get_job_details()
             if not bool(job_details):
@@ -554,7 +604,7 @@ if __name__ == '__main__':
     name = "muktesh"
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
-    url = "https://www.upwork.com/nx/proposals/job/~021948174277523571105/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~021950047928900151592/apply/"
 
     async def main():
         async with async_playwright() as playwright:
