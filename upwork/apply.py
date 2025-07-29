@@ -1,12 +1,13 @@
 import logging
 import random
 from enum import Enum
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 from patchright.async_api import Page
 
 from browser import dismiss_cookies_popup, handle_captcha
-from config import bot_settings
+from config import bot_settings, paths
 from utils import download_file, format_price, generate_proposal
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,34 @@ class UpworkJobApplication:
         logger.error("Max retries exceeded while trying to fetch the page.")
         return None
     
+    async def check_error_message(self) -> bool:
+        """
+        Returns True if the <div class="error-main-message"> element is visible on the page.
+        """
+        try:
+            logger.info("Checking if any error on upwork apply page.")
+
+            await self.page.wait_for_timeout(random.uniform(1.67, 3.53)*100)
+            error_div = self.page.locator("div.error-main-message")
+            visible = await error_div.is_visible()
+
+            if visible:
+                error_msg = (await error_div.text_content()) or "No message found."
+                logger.info(f"Found error message on upwork page. message: {error_msg.strip()}")
+                 
+                logger.info("Taking screenshot ...")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                screenshot_dir = paths.SCREENSHOTS_DIR / f"job_error_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_dir, full_page=True, timeout=30000, type="png")
+                logger.info(f"Screenshot saved at {screenshot_dir}")
+            else:
+                logger.info("No error message on the page.")
+            
+            return visible
+        except Exception as e:
+            logger.error("Failed to check error message. ", exc_info=True)
+            return False
+    
     async def extract_job_details(self, html:str) -> dict:
         """
         Extract job title, description, and custom questions from the HTML source.
@@ -63,13 +92,26 @@ class UpworkJobApplication:
             if job_details_section:
                 title = job_details_section.find('h3')
                 description = job_details_section.find('span', {'id': 'air3-truncation-1'})
-                details['title'] = title.text if title else ""
-                details['description'] = description.text if description else ""
+                details['title'] = title.get_text(strip=True) if title else ""
+                details['description'] = description.get_text(strip=True) if description else ""
+            else:
+                details["title"] = ""
+                details["description"] = ""
+            
+            if not details['title']:
+                logger.info("Title not found. Taking screenshot ...")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                screenshot_dir = paths.SCREENSHOTS_DIR / f"job_description_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_dir, full_page=True, timeout=30000, type="png")
+                logger.info(f"Screenshot saved at {screenshot_dir}")
+                return {}
             
             question_section = soup.find('div', class_="fe-proposal-job-questions")
             if question_section:
                 forms = question_section.find_all('div', class_='form-group')
-                details['questions'] = [form.text.strip() for form in forms if form.text]
+                details['questions'] = [
+                    form.get_text(strip=True) for form in forms if form.get_text(strip=True)
+                ]
             else:
                 details['questions'] = []
             
@@ -426,7 +468,11 @@ class UpworkJobApplication:
                 return await self.handle_bid_form(cover_letter, answers, bid_price)
 
             else:
-                logger.warning("Could not identify job form structure.")
+                logger.warning("Could not identify job form structure. Saving screenshot...")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                screenshot_path = paths.SCREENSHOTS_DIR / f"form_not_found_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
+                logger.info(f"Screenshot saved at {screenshot_path}")
                 return False
             
         except Exception as e:
@@ -452,6 +498,9 @@ class UpworkJobApplication:
             
             logger.info(f"Opening Job Link: {url}")
             await self._fetch_page(url)
+            
+            if await self.check_error_message():
+                return False
             
             await self.set_proposal_type()
 
