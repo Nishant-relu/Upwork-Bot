@@ -547,11 +547,15 @@ class UpworkJobApplication:
             await self._fetch_page(url)
             
             if await self.check_error_message():
+                logger.info("Error message on the page. Exiting job apply process.")
                 return False
             
             await self.set_proposal_type()
             
             if await self.is_disqualified_warning_active():
+                logger.info(
+                    "Disqualified message present with button being disabled. Exiting job apply process."
+                )
                 return False
 
             job_details = await self.get_job_details()
