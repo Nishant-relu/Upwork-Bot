@@ -128,7 +128,8 @@ async def process_jobs_for_user(user: str, jobs:list[dict]) -> None:
         logger.info(f"No jobs to apply for user: {user}")
         return
 
-    proxy = get_proxy(user)
+    # proxy = get_proxy(user)
+    proxy = None
     cookies_path = paths.COOKIES_DIR / f"{user}_cookies.json"
 
     try:
@@ -164,6 +165,7 @@ async def scrape_and_filter_jobs(user: str = "subham") -> list[dict]:
     Scrape and filter jobs from Upwork using the default or given user.
     """
     proxy = get_proxy(user)
+    # proxy = None
     cookies_path = paths.COOKIES_DIR / f"{user}_cookies.json"
     
     try:
@@ -209,6 +211,10 @@ async def main():
 
     logger.info("=============== Upwork Bot Started ===============")
     try:
+        import os
+        os.environ.setdefault("DISPLAY", ":1")
+        # print("OS Environment: ", os.environ)
+
         filtered_jobs = await scrape_and_filter_jobs()
 
         if not filtered_jobs:

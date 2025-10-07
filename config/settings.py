@@ -47,10 +47,10 @@ class Settings:
     HOURLY_RATE: Type[HourlyRate] = HourlyRate
 
     # Proxy configuration from environment
-    PROXY_HOST: str = get_env("BRIGHDATA_HOST")
-    PROXY_PORT: str = get_env("BRIGHDATA_PORT")
-    PROXY_USER: str = get_env("BRIGHDATA_USER")
-    PROXY_PASSWORD: str = get_env("BRIGHDATA_PASSWORD")
+    PROXY_HOST: str = get_env("PROXY_HOST")
+    PROXY_PORT: str = get_env("PROXY_PORT")
+    PROXY_USER: str = get_env("PROXY_USER")
+    PROXY_PASSWORD: str = get_env("PROXY_PASSWORD")
 
 
 bot_settings = Settings()

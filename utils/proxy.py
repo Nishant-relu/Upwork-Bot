@@ -3,12 +3,12 @@ import traceback
 
 import requests
 
-from utils.env import get_env
+# from utils.env import get_env
 
 logger = logging.getLogger(__name__)
 
 
-def get_proxy(name:str) -> dict|None:
+def get_proxy(name:str|None=None) -> dict|None:
     """
     Get proxy settings based on the user's name.
     """
@@ -20,21 +20,21 @@ def get_proxy(name:str) -> dict|None:
         port = bot_settings.PROXY_PORT
         password = bot_settings.PROXY_PASSWORD
         user = bot_settings.PROXY_USER
-        ip_env_var = f"{name.upper()}_IP"
+        # ip_env_var = f"{name.upper()}_IP"
 
         if not all([host, port, password, user]):
             raise ValueError("Missing essential proxy environment variables.")
 
-        user_ip = get_env(ip_env_var)
+        # user_ip = get_env(ip_env_var)
 
-        if not user_ip:
-            raise ValueError(f"Missing IP environment variable for {name}.")
+        # if not user_ip:
+        #     raise ValueError(f"Missing IP environment variable for {name}.")
 
-        proxy_user_with_ip = f"{user}-ip-{user_ip}"
+        # proxy_user_with_ip = f"{user}-ip-{user_ip}"
 
         proxy = {
             "server": f"http://{host}:{port}",
-            "username": proxy_user_with_ip,
+            "username": user,
             "password": password
         }
 

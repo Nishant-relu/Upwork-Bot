@@ -55,8 +55,8 @@ class AntiCloudflare:
         screen_y = await self.page.evaluate("() => window.screenY")
 
         # Calculate screen-level coordinates
-        target_x = screen_x + rect['x'] + 35 + random.randint(3, 7)
-        target_y = screen_y + rect['y'] + 118 + random.randint(3, 7)
+        target_x = screen_x + rect['x'] + 40 + random.randint(3, 7)
+        target_y = screen_y + rect['y'] + 125 + random.randint(3, 7)
 
         # target_x, target_y = screen_coord_x, screen_coord_y
         start_x, start_y = self.mouse.position

@@ -1,0 +1,17 @@
+[Unit]
+Description=Upwork Bot Scheduler
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/naman/Desktop/projects/upwork_bot
+# Use the Python binary from your virtual environment
+ExecStart=/home/naman/Desktop/projects/upwork_bot/.venv/bin/python /home/naman/Desktop/projects/upwork_bot/bot_scheduler.py
+Restart=always
+RestartSec=10
+User=naman
+# Optional: minimal environment variables
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target
