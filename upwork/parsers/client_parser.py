@@ -1,6 +1,7 @@
 import logging
 from bs4 import BeautifulSoup
 from ..selectors import ClientInfoSelectors
+from utils import normalize_country
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ class ClientInfoParser:
         Extracts client info from job HTML.
         """
         client_data = {}
-        data = {}
+        data: dict[str, str|int|None] = {}
 
         try:
             soup = BeautifulSoup(html, 'lxml')
@@ -21,16 +22,16 @@ class ClientInfoParser:
             location_li = soup.find(*ClientInfoSelectors.LOCATION)
             if location_li:
                 location_key = location_li.find("strong")
-                location_key = location_key.text.strip() if location_key else "Not Provided"
+                location_key = location_key.text.strip() if location_key else ""
 
                 location_value = location_li.find("div")
                 location_value = (
                     location_value.text.strip().replace(" ", "").replace("\n", " ")
-                    ) if location_value else "Not Provided"
+                    ) if location_value else ""
             else:
-                location_key = "Not Provided"
-                location_value = "Not Provided"
-            data[location_key] = location_value
+                location_key = ""
+                location_value = ""
+            data["location"] = location_key
 
             # Job Posting Stats
             job_posting_li = soup.find(*ClientInfoSelectors.JOB_POSTING_STATS)
@@ -105,6 +106,8 @@ class ClientInfoParser:
                         client_data["active"] = value.split()[-2]
                 elif "hourly rate" in key.lower():
                     client_data["hourly rate"] = key.split()[0].replace("$", "")
+                elif "location" in key.lower():
+                    client_data["location"] = normalize_country(value.strip())
             
             logger.info(f"Parsed client info: {client_data}")
         except Exception as e:

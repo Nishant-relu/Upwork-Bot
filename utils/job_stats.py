@@ -115,7 +115,8 @@ async def save_job_filter_stats(counters:dict):
                 'no_activity_client_data': 0,
                 'no_client_data': 0,
                 'proposal': 0,
-                'max_proposal': 0
+                'max_proposal': 0,
+                'location': 0
             },
             'total_jobs_after_filter_1':0,
             'total_jobs_after_filter_2':0

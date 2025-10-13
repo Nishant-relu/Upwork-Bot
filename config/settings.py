@@ -40,6 +40,14 @@ class Settings:
     MIN_TOTAL_SPENT: int = 5000
     MAX_PROPOSAL: int = 50
     SKIP_KEYWORDS: Tuple[str, ...] = ('Lead Generation',)
+    # add Standard ISO country names only
+    SKIP_LOCATIONS: Tuple[str, ...] = (
+        'Pakistan',
+        'Bangladesh',
+        'Sri Lanka',
+        'Nepal',
+        'Bhutan',
+    )
 
     WAIT_TIME: Tuple[int, int] = (20, 30)
 

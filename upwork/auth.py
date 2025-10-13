@@ -177,6 +177,7 @@ if __name__ == '__main__':
 
     name = "subham"
     proxy = get_proxy(name)
+    proxy = None
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
 
     async def main():

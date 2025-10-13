@@ -51,7 +51,8 @@ class JobFilter:
                 'no_activity_client_data': 0,
                 'no_client_data': 0,
                 'proposal': 0,
-                'max_proposal': 0
+                'max_proposal': 0,
+                'location': 0
             },
             'total_jobs_after_filter_1':0,
             'total_jobs_after_filter_2':0
@@ -169,6 +170,18 @@ class JobFilter:
             logger.info("Link saved to text File.")
             logger.info("Link was skipped as Client's Avg. hourly rate is not given.\n\n")
             return False
+
+        if client_data["location"]:
+            banned_countries = (country.lower() for country in bot_settings.SKIP_LOCATIONS)
+            if client_data['location'].lower() in banned_countries:
+                self.counters['skipped_filter2']['total'] += 1
+                self.counters['skipped_filter2']['location'] += 1
+
+                await save_url(link, "Skipped Banned location.")
+                logger.info(f"Skipped link: {link} ")
+                logger.info("Link saved to text File.")
+                logger.info("Link was skipped as Location is banned.\n\n")
+                return False
 
         return True
     
@@ -370,22 +383,34 @@ if __name__ == '__main__':
     from config import configure_logging
     from upwork.scraper import JobScraper
     from utils import get_proxy
+    from browser.context import ContextHandler
 
     configure_logging()
 
     name = "subham"
     proxy = get_proxy(name)
+    cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
     
     async def main():
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(channel='chrome',headless=False)
+            browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
             context = await browser.new_context()
             page = await context.new_page()
 
             scraper = JobScraper(page)
-            job_data = await scraper.scrape_jobs()
+            all_jobs = await scraper.scrape_jobs()
+
+        with open('scraped_data.json', 'w') as f:
+            json.dump(all_jobs, f, indent=4)
+        
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
+            context_handler = ContextHandler(browser, cookies_path)
+            context = await context_handler.create()
+            page = await context.new_page()
+            
             filter = JobFilter(page)
-            data = await filter.filter_jobs(job_data, name)
+            data = await filter.filter_jobs(all_jobs, name)
 
         if data:
             with open("filtered_data_3.json", 'w') as f:
