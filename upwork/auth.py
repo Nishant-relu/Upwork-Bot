@@ -102,8 +102,8 @@ class UpworkLoginManager:
     
     async def login(self, email: str, password: str, sec_answer: str) -> bool:
         """Standard Login Procedure"""
-        try:
-            for attempt in range(1, bot_settings.MAX_RETRY+1):
+        for attempt in range(1, bot_settings.MAX_RETRY+1):
+            try:
                 # Navigate to login page
                 await self.page.goto(constants.UPWORK_LOGIN_URL)
                 if not await handle_captcha(self.page):
@@ -117,12 +117,15 @@ class UpworkLoginManager:
                     return True
                 else:
                     logger.warning(f"Login attempt {attempt} failed. Retrying...")
+                    await self.page.wait_for_timeout(random.uniform(3000, 5000))
                 
-            logger.error("Exceeded max login retries.")
-            return False
-        except Exception as e:
-            logger.error(f"Critical error during login process: {e}", exc_info=True)
-            return False
+            except Exception as e:
+                logger.error(f"Critical error during login process: {e}", exc_info=True)
+                logger.warning(f"Retry {attempt + 1}: Error fetching page - {e}")
+                await self.page.wait_for_timeout(random.uniform(3000, 5000))
+                
+        logger.error("Exceeded max login retries.")
+        return False
         
     async def validate_or_login(self, account_name:str):
         """Validate login using session or fallback to credentials."""
@@ -178,7 +181,7 @@ if __name__ == '__main__':
 
     async def main():
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(channel='chrome',headless=False)
+            browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
             context_handler = ContextHandler(browser, cookies_path)
             context = await context_handler.create()
             page = await context.new_page()

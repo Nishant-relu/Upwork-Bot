@@ -12,6 +12,8 @@ RestartSec=10
 User=naman
 # Optional: minimal environment variables
 Environment="PYTHONUNBUFFERED=1"
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/naman/.Xauthority
 
 [Install]
 WantedBy=multi-user.target
