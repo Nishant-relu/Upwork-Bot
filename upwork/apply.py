@@ -559,7 +559,7 @@ class UpworkJobApplication:
             while True:
                 try:
                     error_message = self.page.locator("p.error-message-text")
-                    if error_message.is_visible():
+                    if await error_message.is_visible():
                         logger.warning(f"Got an error message: {await error_message.text_content()}")
                         break
 
@@ -630,10 +630,10 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "naman"
+    name = "muktesh"
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
-    url = "https://www.upwork.com/nx/proposals/job/~021996368933736818707/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~021996743581066471443/apply/"
 
     async def main():
         async with async_playwright() as playwright:
