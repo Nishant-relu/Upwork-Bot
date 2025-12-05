@@ -116,7 +116,7 @@ def send_daily_report():
                 <li>Client's Avg. hourly rate not found: {report_data['skipped_filter2']['hourly_rate']}</li>
                 <li>Proposals info not found: {report_data['skipped_filter2']['proposal']}</li>
                 <li>Proposal greater than max proposal (50): {report_data['skipped_filter2']['max_proposal']}</li>
-                <li>Job in banned locations: {report_data['skipped_filter2']['location']}</li>
+                <li>Job in banned locations: {report_data['skipped_filter2'].get('location', 0)}</li>
             </ul>
             <h4>Total jobs after filter2: {report_data['total_jobs_after_filter_2']}</h4>
             <h4>Naman Account: </h4>
@@ -200,7 +200,7 @@ def send_faild_jobs():
 
 def main():
     send_daily_report()
-    # send_faild_jobs()
+    send_faild_jobs()
 
 
 if __name__ == '__main__':

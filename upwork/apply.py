@@ -4,7 +4,7 @@ from enum import Enum
 from datetime import datetime
 
 from bs4 import BeautifulSoup
-from patchright.async_api import Page
+from patchright.async_api import Page, TimeoutError
 
 from browser import dismiss_cookies_popup, handle_captcha
 from config import bot_settings, paths
@@ -33,10 +33,20 @@ class UpworkJobApplication:
 
         for attempt in range(1, bot_settings.MAX_RETRY+1):
             try:
+                await self.page.goto(url, wait_until="commit", timeout=60000)
+                try:
+                    await self.page.wait_for_load_state("domcontentloaded", timeout=60000)
+                except TimeoutError:
+                    logger.warning("domcontentloaded timeout continuing anyway")
 
-                await self.page.goto(url, wait_until="domcontentloaded")
-
+                await self.page.wait_for_timeout(random.uniform(3.19, 5.97) * 1000)
                 if await handle_captcha(self.page):
+                    await self.page.wait_for_timeout(random.uniform(3.12, 5.98) * 1000)
+                    page_title = await self.page.title()
+                    if "just a moment" in page_title.strip().lower():
+                        await self.page.wait_for_timeout(random.uniform(3.12, 5.98) * 1000)
+                        await handle_captcha(self.page)
+                    
                     await dismiss_cookies_popup(self.page)
                     return True
                 
@@ -546,6 +556,21 @@ class UpworkJobApplication:
             logger.info(f"Opening Job Link: {url}")
             await self._fetch_page(url)
             
+            while True:
+                try:
+                    error_message = self.page.locator("p.error-message-text")
+                    if error_message.is_visible():
+                        logger.warning(f"Got an error message: {await error_message.text_content()}")
+                        break
+
+                    job_detail_element = self.page.locator("div.fe-job-details")
+                    await job_detail_element.wait_for(state="visible")
+                    break
+                except TimeoutError:
+                    logger.warning("Job page not loaded waiting....")
+                    await self.page.wait_for_timeout(random.uniform(3.17, 5.97) * 1000)
+
+
             if await self.check_error_message():
                 logger.info("Error message on the page. Exiting job apply process.")
                 return False
@@ -605,10 +630,10 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "muktesh"
+    name = "naman"
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
-    url = "https://www.upwork.com/nx/proposals/job/~021950047928900151592/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~021996368933736818707/apply/"
 
     async def main():
         async with async_playwright() as playwright:

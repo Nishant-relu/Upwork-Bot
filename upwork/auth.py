@@ -1,5 +1,6 @@
 import logging
 import random
+from datetime import datetime
 
 from patchright.async_api import Page
 
@@ -49,7 +50,7 @@ class UpworkLoginManager:
             if user_menu or user_profile:
                 logger.info("Login successful")
                 return True
-            await self.page.screenshot(type="png", path=paths.SCREENSHOTS_DIR/"login_failed.png", full_page=True)
+            await self.page.screenshot(type="png", path=paths.SCREENSHOTS_DIR/f"login_failed_{datetime.now().strftime("%d%m%Y_%H%M%S")}.png", full_page=True)
             logger.warning("Jobs feed not visible. Login might have failed.")
             return False
         except Exception as e:
@@ -63,7 +64,14 @@ class UpworkLoginManager:
         try:
             logger.info("Checking session persistence via dashboard...")
 
-            await self.page.goto(constants.UPWORK_DASHBOARD_URL, wait_until="domcontentloaded")
+            # await self.page.goto(constants.UPWORK_DASHBOARD_URL, wait_until="domcontentloaded")
+            await self.page.goto(constants.UPWORK_DASHBOARD_URL, wait_until="commit", timeout=60000)
+            try:
+                await self.page.wait_for_load_state("domcontentloaded", timeout=60000)
+            except TimeoutError:
+                logger.warning("domcontentloaded timeout  continuing anyway")
+            
+            await self.wait_random(3.25, 5.79)
             if not await handle_captcha(self.page):
                 raise ValueError("Failed to bypass Captcha.")
             
@@ -175,7 +183,7 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "subham"
+    name = "naman"
     proxy = get_proxy(name)
     proxy = None
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"

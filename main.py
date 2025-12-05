@@ -175,7 +175,6 @@ async def scrape_and_filter_jobs(user: str = "subham") -> list[dict]:
             browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
             context = await browser.new_context()
             page = await context.new_page()
-
             scraper = JobScraper(page)
             all_jobs = await scraper.scrape_jobs()
 

@@ -3,7 +3,7 @@ import math
 import random
 import time
 
-from patchright.async_api import Page
+from patchright.async_api import Page, TimeoutError
 from pynput.mouse import Button, Controller
 
 
@@ -13,7 +13,13 @@ class AntiCloudflare:
         self.mouse = Controller()
     
     async def check(self):
-        challenge = await self.page.query_selector('input[name="cf-turnstile-response"]')
+        # challenge = await self.page.query_selector('input[name="cf-turnstile-response"]')
+        try:
+            challenge = self.page.locator('input[name="cf-turnstile-response"]')
+            await challenge.wait_for(state="attached")
+        except TimeoutError:
+            print("Captcha does not attach to dom.")
+        
         if challenge:
             await asyncio.sleep(random.uniform(7.157, 9.97))
             challenge = await self.page.query_selector('input[name="cf-turnstile-response"]')
@@ -42,7 +48,12 @@ class AntiCloudflare:
     
     async def bypass(self):
 
-        elem = self.page.locator('input[name="cf-turnstile-response"]').locator('xpath=ancestor::div[@style]').first
+        try:
+            elem = self.page.locator('input[name="cf-turnstile-response"]').locator('xpath=ancestor::div[@style]').first
+            await elem.wait_for(state="attached")
+        except TimeoutError:
+            print("Captcha box element not prsent.")
+        
         await elem.scroll_into_view_if_needed()
         rect = await elem.bounding_box()
 
