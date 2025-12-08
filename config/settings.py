@@ -14,9 +14,9 @@ class ProposalType(str, Enum):
 
 
 class HourlyRate(IntEnum):
-    KISHAN = 10
-    NAMAN = 20
-    MUKTESH = 30
+    KISHAN = 15
+    NAMAN = 25
+    MUKTESH = 35
 
     @classmethod
     def get_by_name(cls, name: str) -> int:
