@@ -556,7 +556,7 @@ class UpworkJobApplication:
             logger.info(f"Opening Job Link: {url}")
             await self._fetch_page(url)
             
-            max_wait_time = 20 * 60000
+            max_wait_time = 20 * 1000
             current_wait_time = 0.0
             while True:
                 try:
@@ -575,7 +575,7 @@ class UpworkJobApplication:
                         logger.warning("Max waiting time exceded for page loading. page does not loaded. exiting..")
                         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                         screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_page_load_failed_{timestamp}.png"
-                        self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
+                        await self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
                         break
                     current_wait_time+=wait_time_to_load_page
                     await self.page.wait_for_timeout(wait_time_to_load_page)

@@ -30,9 +30,10 @@ async def categorize_jobs(job_data: list[dict]) -> dict[str, list]:
         hourly_rate:str = client_data.get("hourly rate")
         try:
             if hourly_rate is not None:
-                if float(hourly_rate) > 20:
+                rate = float(hourly_rate)
+                if rate > 25:
                     categorized["muktesh"].append(job)
-                elif float(hourly_rate) > 15:
+                elif rate > 15:
                     categorized["naman"].append(job)
                 else:
                     categorized["kishan"].append(job)
