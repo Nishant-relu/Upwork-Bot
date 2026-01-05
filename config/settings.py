@@ -10,6 +10,8 @@ from utils.env import get_env
 logger = logging.getLogger(__name__)
 
 SPREADSHEET_ID = get_env("GOOGLE_SHEETS_SPREADSHEET_ID")
+COMMON_CONFIG_SHEET_NAME = get_env("COMMON_CONFIG_RANGE_NAME")
+USER_CONFIG_SHEET_NAME = get_env("USER_CONFIG_RANGE_NAME")
 
 
 @dataclass(frozen=True)
@@ -73,7 +75,7 @@ def load_settings_from_sheet(
     return config
 
 
-def load_user_config(
+def load_user_config_from_sheet(
     spreadsheet_id: str,
     range_name: str,
 ) -> dict[str, UserConfig]:
@@ -138,12 +140,12 @@ def validate_user_configs(users: dict[str, UserConfig]) -> None:
 def build_settings() -> Settings:
     sheet_config = load_settings_from_sheet(
         SPREADSHEET_ID,
-        "Sheet3!A1:B50",
+        COMMON_CONFIG_SHEET_NAME,
     )
 
-    user_config = load_user_config(
+    user_config = load_user_config_from_sheet(
         SPREADSHEET_ID,
-        "user config!A1:H10",
+        USER_CONFIG_SHEET_NAME,
     )
 
     validate_user_configs(user_config)
