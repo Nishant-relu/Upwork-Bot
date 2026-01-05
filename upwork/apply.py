@@ -643,7 +643,8 @@ if __name__ == '__main__':
     name = "muktesh"
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
-    url = "https://www.upwork.com/nx/proposals/job/~021996743581066471443/apply/"
+    # url = "https://www.upwork.com/nx/proposals/job/~021996743581066471443/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~022007598235282144268/apply/"
 
     async def main():
         async with async_playwright() as playwright:
