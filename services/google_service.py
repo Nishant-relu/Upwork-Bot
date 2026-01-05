@@ -3,12 +3,10 @@ from functools import lru_cache
 from pathlib import Path
 
 import pandas as pd
-from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 
-load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +108,10 @@ def get_sheet_data(
 
 if __name__ == '__main__':
     import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    
     SPREADSHEET_ID = os.getenv('GOOGLE_SHEETS_SPREADSHEET_ID')
     RANGE_NAME = 'user config!A1:H10'
 
