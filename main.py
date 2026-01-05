@@ -1,12 +1,13 @@
 import logging
-import random
-import time
 
-from patchright.async_api import Page, async_playwright
+# import random
+# import time
+from patchright.async_api import async_playwright
 
-from browser import PatchrightBrowser
+# from browser import PatchrightBrowser
 from browser.context import ContextHandler
 from config import bot_settings, paths
+from config.schema import UserConfig
 from upwork.apply import UpworkJobApplication
 from upwork.auth import UpworkLoginManager
 from upwork.filter import JobFilter
@@ -16,27 +17,39 @@ from utils import get_proxy, save_job_apply_stats, save_url
 logger = logging.getLogger(__name__)
 
 
-async def categorize_jobs(job_data: list[dict]) -> dict[str, list]:
+async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
     """
-    Categorize jobs based on client hourly rate.
-    
-    - Jobs with hourly rate > 20 go to 'muktesh'
-    - Others go to 'naman'
+    Categorize jobs based on client hourly rate using USER_CONFIG.
+
+    - Only users with account_type == 'applicant' are considered
+    - Job is assigned if:
+        min_client_hourly_rate <= client_rate < max_client_hourly_rate
     """
-    categorized = {"muktesh": [], "naman": [], "kishan":[]}
+
+    # Initialize result dynamically from applicant users
+    categorized: dict[str, list[dict]] = {
+        username: []
+        for username, user in bot_settings.USER_CONFIG.items()
+        if user.account_type.lower() == "applicant"
+    }
 
     for job in job_data:
-        client_data:dict = job.get("client_data", {})
-        hourly_rate:str = client_data.get("hourly rate")
+        client_data: dict = job.get("client_data", {})
+        hourly_rate = client_data.get("hourly rate")
+
         try:
-            if hourly_rate is not None:
-                rate = float(hourly_rate)
-                if rate > 25:
-                    categorized["muktesh"].append(job)
-                elif rate > 15:
-                    categorized["naman"].append(job)
-                else:
-                    categorized["kishan"].append(job)
+            if hourly_rate is None:
+                continue
+
+            rate = float(hourly_rate)
+
+            for username, user in bot_settings.USER_CONFIG.items():
+                if user.account_type.lower() != "applicant":
+                    continue
+
+                if user.min_client_hourly_rate <= rate < user.max_client_hourly_rate:
+                    categorized[username].append(job)
+                    break  # stop once assigned
 
         except (ValueError, TypeError):
             logger.warning(f"Invalid hourly rate encountered: {hourly_rate}")
@@ -55,7 +68,7 @@ async def extract_job_id(job_link: str) -> str:
 
 
 async def attempt_job_application(
-        user:str,
+        user:UserConfig,
         job:dict[str, str|list],
         job_applicator:UpworkJobApplication,
         invitation_job_apply:bool = False
@@ -63,7 +76,7 @@ async def attempt_job_application(
 
     link:str = job.get("link", "")
     if not link:
-        logger.warning(f"[{user}] Skipping job with missing link: {job}")
+        logger.warning(f"[{user.name}] Skipping job with missing link: {job}")
         return False
 
     apply_link = job.get("apply_link", None)
@@ -81,21 +94,21 @@ async def attempt_job_application(
 
     fixed_price = job.get("fixed_price", None)
 
-    logger.info(f"[{user}] Attempting to apply for job: {apply_link}")
+    logger.info(f"[{user.name}] Attempting to apply for job: {apply_link}")
 
     try:
         success = await job_applicator.job_apply(apply_link, user, attachment_link, fixed_price)
         if success:
-            logger.info(f"[{user}] Successfully applied to {apply_link} \n\n")
+            logger.info(f"[{user.name}] Successfully applied to {apply_link} \n\n")
             await save_url(link, f"Successfully applied for job using {user}")
             await save_job_apply_stats(user, link, invitation_job_apply)
             return True
 
         await save_url(link, f"Failed to apply for job using {user}", debug=True)
-        logger.warning(f"[{user}] Failed to apply to {apply_link} \n\n")
+        logger.warning(f"[{user.name}] Failed to apply to {apply_link} \n\n")
         return False
     except Exception as e:
-        logger.error(f"[{user}] Error while applying to {apply_link}: {e}", exc_info=True)
+        logger.error(f"[{user.name}] Error while applying to {apply_link}: {e}", exc_info=True)
         return False
 
 
@@ -122,20 +135,21 @@ async def attempt_job_application(
 #         logger.error(f"Got an error while processing invitations for user: {user} | {e}", exc_info=True)
 
 
-async def process_jobs_for_user(user: str, jobs:list[dict]) -> None:
+async def process_jobs_for_user(user_name: str, jobs:list[dict]) -> None:
     """ Applies to a list of jobs for a given user. """
 
     if not jobs:
-        logger.info(f"No jobs to apply for user: {user}")
+        logger.info(f"No jobs to apply for user: {user_name}")
         return
 
+    user = bot_settings.USER_CONFIG.get(user_name)
     # proxy = get_proxy(user)
     proxy = None
-    cookies_path = paths.COOKIES_DIR / f"{user}_cookies.json"
+    cookies_path = paths.COOKIES_DIR / f"{user.name}_cookies.json"
 
     try:
         async with async_playwright() as playwright:
-            logger.info(f"Processing jobs for user: {user}")
+            logger.info(f"Processing jobs for user: {user.name}")
 
             browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
             context_handler = ContextHandler(browser, cookies_path)
@@ -151,23 +165,26 @@ async def process_jobs_for_user(user: str, jobs:list[dict]) -> None:
                 for job in jobs:
                     await attempt_job_application(user, job, job_applicator)
             else:
-                logger.info(f"No jobs to apply for user: {user}")
+                logger.info(f"No jobs to apply for user: {user.name}")
             
             await context_handler.destroy()
             # logger.info("Processing Invitations.")
             # await process_invitation_jobs_for_user(user, page, job_applicator)
             
     except Exception as e:
-        logger.error(f"Error processing jobs for user '{user}': {e}", exc_info=True)
+        logger.error(f"Error processing jobs for user '{user.name}': {e}", exc_info=True)
 
 
-async def scrape_and_filter_jobs(user: str = "subham") -> list[dict]:
+async def scrape_and_filter_jobs(user: UserConfig | None = None) -> list[dict]:
     """
     Scrape and filter jobs from Upwork using the default or given user.
     """
-    proxy = get_proxy(user)
+    if user is None:
+        user = bot_settings.get_worker_user()
+    
+    proxy = get_proxy(user.name)
     # proxy = None
-    cookies_path = paths.COOKIES_DIR / f"{user}_cookies.json"
+    cookies_path = paths.COOKIES_DIR / f"{user.name}_cookies.json"
     
     try:
         all_jobs = []
@@ -190,13 +207,13 @@ async def scrape_and_filter_jobs(user: str = "subham") -> list[dict]:
             page = await context.new_page()
 
             job_filter = JobFilter(page)
-            filtered_jobs = await job_filter.filter_jobs(all_jobs)
+            filtered_jobs = await job_filter.filter_jobs(all_jobs, user)
 
             await context_handler.destroy()
 
             return filtered_jobs or []
     except Exception as e:
-        logger.error(f"Error during job scraping/filtering for user '{user}': {e}", exc_info=True)
+        logger.error(f"Error during job scraping/filtering for user '{user.name}': {e}", exc_info=True)
         return []
 
 
@@ -223,9 +240,9 @@ async def main():
 
         categorized_jobs = await categorize_jobs(filtered_jobs)
 
-        for user, jobs in categorized_jobs.items():
-            logger.info(f"Processing {len(jobs)} jobs for user: {user}")
-            await process_jobs_for_user(user, jobs)
+        for user_name, jobs in categorized_jobs.items():
+            logger.info(f"Processing {len(jobs)} jobs for user: {user_name}")
+            await process_jobs_for_user(user_name, jobs)
 
     except Exception as e:
         logger.error(f"Unexpected error in main execution: {e}", exc_info=True)

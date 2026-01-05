@@ -4,9 +4,10 @@ from datetime import datetime
 
 from patchright.async_api import Page
 
-from browser import dismiss_cookies_popup, handle_captcha, validate_proxy_ip
+from browser import dismiss_cookies_popup, handle_captcha
 from config import constants, bot_settings, paths
-from utils import get_credentials, get_env, get_proxy
+from utils import get_proxy
+from config.schema import UserConfig
 
 from .selectors import UpworkLoginSelectors
 
@@ -135,21 +136,24 @@ class UpworkLoginManager:
         logger.error("Exceeded max login retries.")
         return False
         
-    async def validate_or_login(self, account_name:str):
+    async def validate_or_login(self, user:UserConfig):
         """Validate login using session or fallback to credentials."""
 
         try:
+            account_name = user.name
             logger.info(f"Starting login for account: {account_name}")
 
             # Verify proxy connection
-            expected_ip = get_env(f"{account_name.upper()}_IP").strip()
+            # expected_ip = get_env(f"{account_name.upper()}_IP").strip()
             # await validate_proxy_ip(self.page, expected_ip)
 
             #check if session still active
             if await self.check_session_persistence():
                 return True
             
-            email, password, sec_answer = get_credentials(account_name)
+            email = user.email
+            password = user.password
+            sec_answer = user.security_answer
 
             # Session expired, proceed with login workflow
             current_url:str = self.page.url
@@ -176,14 +180,16 @@ if __name__ == '__main__':
     import asyncio
     from patchright.async_api import async_playwright
     from browser.context import ContextHandler
-    from browser.manager import PatchrightBrowser
+    # from browser.manager import PatchrightBrowser
     from config.logger_config import configure_logging
     from utils.proxy import get_proxy
     from config import paths
 
     configure_logging()
 
-    name = "naman"
+    worker_user = bot_settings.get_worker_user()
+    name = worker_user.name
+    print(f"Using worker user: {name}")
     proxy = get_proxy(name)
     proxy = None
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
@@ -195,7 +201,7 @@ if __name__ == '__main__':
             context = await context_handler.create()
             page = await context.new_page()
             manager = UpworkLoginManager(page)
-            logged_in = await manager.validate_or_login(name)
+            logged_in = await manager.validate_or_login(worker_user)
 
             if logged_in:
                 print("Logged into account successfully.")

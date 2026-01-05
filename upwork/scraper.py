@@ -95,14 +95,16 @@ class JobScraper:
 
 if __name__ == "__main__":
     from patchright.async_api import async_playwright
-    from browser.manager import PatchrightBrowser
+    # from browser.manager import PatchrightBrowser
     from config.logger_config import configure_logging
     from utils.proxy import get_proxy
     import asyncio
 
     configure_logging()
 
-    name = "subham"
+    worker_user = bot_settings.get_worker_user()
+    name = worker_user.name
+    print(f"Using worker user: {name}")
     proxy = get_proxy(name)
 
     async def main():

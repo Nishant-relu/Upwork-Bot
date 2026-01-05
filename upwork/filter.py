@@ -7,6 +7,7 @@ from patchright.async_api import Page
 
 from browser import dismiss_cookies_popup, handle_captcha
 from config import bot_settings, paths
+from config.schema import UserConfig
 from upwork.parser import JobHtmlParser
 from utils import save_job_filter_stats, save_url
 
@@ -307,25 +308,25 @@ class JobFilter:
             return {}
         return await self.filter_2(job_data)
 
-    async def check_session_or_login(self, name:str):
+    async def check_session_or_login(self, user:UserConfig):
         """
         Validate or login using cookies.
         """
         try:
-            logger.info(f"Logging in with {name}'s credentials.")
+            logger.info(f"Logging in with {user.name}'s credentials.")
             manager = UpworkLoginManager(self.page)
-            return await manager.validate_or_login(name)
+            return await manager.validate_or_login(user)
         except Exception as e:
             logger.error(f"Error validating cookies or login: {e}", exc_info=True)
             return False
     
-    async def filter_jobs(self, jobs_data:list[dict], account_name:str|None = None) -> list[dict]:
+    async def filter_jobs(self, jobs_data:list[dict], worker_user:UserConfig|None = None) -> list[dict]:
         """
         Apply filtering on a list of job data.
         """
         try:
             logger.info("Filtering of Jobs Data Started...")
-            name  = account_name if account_name else "subham"
+            user  = worker_user if worker_user else bot_settings.get_worker_user()
             filtered_jobs = []
 
             if not jobs_data:
@@ -333,7 +334,7 @@ class JobFilter:
                 return filtered_jobs
             
             self.counters['total_jobs'] = len(jobs_data)
-            success = await self.check_session_or_login(name)
+            success = await self.check_session_or_login(user)
 
             if not success:
                 logger.warning("Failed to login. Aborting job filtering process.")
@@ -379,7 +380,7 @@ class JobFilter:
 if __name__ == '__main__':
     import asyncio
     from patchright.async_api import async_playwright
-    from browser import PatchrightBrowser
+    # from browser import PatchrightBrowser
     from config import configure_logging
     from upwork.scraper import JobScraper
     from utils import get_proxy

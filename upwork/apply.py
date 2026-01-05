@@ -8,6 +8,7 @@ from patchright.async_api import Page, TimeoutError
 
 from browser import dismiss_cookies_popup, handle_captcha
 from config import bot_settings, paths
+from config.schema import UserConfig
 from utils import download_file, format_price, generate_proposal
 
 logger = logging.getLogger(__name__)
@@ -86,7 +87,7 @@ class UpworkJobApplication:
             
             return visible
         except Exception as e:
-            logger.error("Failed to check error message. ", exc_info=True)
+            logger.error(f"Failed to check error message. error: {e}", exc_info=True)
             return False
     
     async def is_disqualified_warning_active(self) -> bool:
@@ -133,7 +134,7 @@ class UpworkJobApplication:
             return True
 
         except Exception as e:
-            logger.error("Error during disqualification check.", exc_info=True)
+            logger.error(f"Error during disqualification check. error: {e}", exc_info=True)
             return False
 
     async def extract_job_details(self, html:str) -> dict:
@@ -316,7 +317,7 @@ class UpworkJobApplication:
 
                 try:
                     question = await question_label.text_content() or "[Label missing]"
-                except:
+                except Exception:
                     question = "[Label fetch error]"
 
                 answer = answers.get(str(question_index))
@@ -539,7 +540,7 @@ class UpworkJobApplication:
     async def job_apply(
             self, 
             url:str, 
-            name:str,  
+            user:UserConfig,  
             attachment_link:str|None=None, 
             project_bid_amount:float|None=None
     ) -> bool:
@@ -610,7 +611,7 @@ class UpworkJobApplication:
             answers = proposal.get("question_answers", {})
             cover_letter = proposal.get("response", "")
 
-            hourly_rate = bot_settings.HOURLY_RATE.get_by_name(name)
+            hourly_rate = user.hourly_rate
 
             applied_successfully = await self.fill_form(hourly_rate, cover_letter, answers, project_bid_amount)
             await self.page.wait_for_timeout(random.uniform(2.91, 3.53)*1000)
@@ -641,6 +642,7 @@ if __name__ == '__main__':
     configure_logging()
 
     name = "muktesh"
+    user:UserConfig = bot_settings.USER_CONFIG.get(name)
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
     # url = "https://www.upwork.com/nx/proposals/job/~021996743581066471443/apply/"
@@ -656,9 +658,9 @@ if __name__ == '__main__':
             page = await context.new_page()
 
             login_manager = UpworkLoginManager(page)
-            await login_manager.validate_or_login(name)
+            await login_manager.validate_or_login(user)
 
             applicator = UpworkJobApplication(page)
-            await applicator.job_apply(url=url, name=name)
+            await applicator.job_apply(url=url, user=user)
     
     asyncio.run(main())
