@@ -155,9 +155,11 @@ def send_daily_report():
         # logger.info(f"smtp server: {smtp_server} \nsmtp port: {smtp_port} \nsmtp user: {smtp_user} \nsmtp password: {smtp_password}")
 
         email = Email(smtp_server, smtp_port, smtp_user, smtp_password)
+
+        cc_emails = ["sushilvarma@reluconsultancy.in"]
         
         logger.info("Sending email...")
-        email.send_email(subject, html_body, recepient_email, sender_email, sender_name, html=True)
+        email.send_email(subject, html_body, recepient_email, sender_email, sender_name, cc_emails, html=True)
 
         logger.info("Email sent successfully!")
     
