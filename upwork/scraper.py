@@ -14,7 +14,7 @@ from utils import save_scraped_jobs
 
 logger = logging.getLogger(__name__)
 
-PAGE_BOTTOM = 'div.air3-card-section.d-lg-flex.justify-space-between[data-test="LazyHydrate"]'
+PAGE_BOTTOM = '#jobs-per-page'
 
 
 class JobScraper:
