@@ -13,9 +13,11 @@ from upwork.auth import UpworkLoginManager
 from upwork.filter import JobFilter
 from upwork.scraper import JobScraper
 from utils import get_proxy, save_job_apply_stats, save_url
+from utils.job_stats import update_job_in_sheet
 
 logger = logging.getLogger(__name__)
 
+google_sheet_updates: list[dict] = []
 
 async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
     """
@@ -97,12 +99,30 @@ async def attempt_job_application(
     logger.info(f"[{user.name}] Attempting to apply for job: {apply_link}")
 
     try:
-        success = await job_applicator.job_apply(apply_link, user, attachment_link, fixed_price)
+        success, error = await job_applicator.job_apply(apply_link, user, attachment_link, fixed_price)
         if success:
             logger.info(f"[{user.name}] Successfully applied to {apply_link} \n\n")
             await save_url(link, f"Successfully applied for job using {user}")
             await save_job_apply_stats(user, link, invitation_job_apply)
+            update = {
+                "key": link,
+                "values": {
+                    "status": "applied",
+                    "applied_by": user.name
+                }
+            }
+            google_sheet_updates.append(update)
             return True
+
+        update = {
+            "key": link,
+            "values": {
+                "status": "application_failed",
+                "applied_by": user.name,
+                "apply_failed_reason": error
+            }
+        }
+        google_sheet_updates.append(update)
 
         await save_url(link, f"Failed to apply for job using {user}", debug=True)
         logger.warning(f"[{user.name}] Failed to apply to {apply_link} \n\n")
@@ -243,6 +263,11 @@ async def main():
         for user_name, jobs in categorized_jobs.items():
             logger.info(f"Processing {len(jobs)} jobs for user: {user_name}")
             await process_jobs_for_user(user_name, jobs)
+        
+        if google_sheet_updates:
+            await update_job_in_sheet(google_sheet_updates)
+        
+        logger.info("Upwork Bot completed all tasks successfully.")
 
     except Exception as e:
         logger.error(f"Unexpected error in main execution: {e}", exc_info=True)
