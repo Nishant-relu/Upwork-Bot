@@ -62,7 +62,7 @@ class UpworkJobApplication:
         logger.error("Max retries exceeded while trying to fetch the page.")
         return None
     
-    async def check_error_message(self) -> bool:
+    async def check_error_message(self) -> tuple[bool, str]:
         """
         Returns True if the <div class="error-main-message"> element is visible on the page.
         """
@@ -85,12 +85,12 @@ class UpworkJobApplication:
             else:
                 logger.info("No error message on the page.")
             
-            return visible
+            return visible, error_msg.strip() if visible else ""
         except Exception as e:
             logger.error(f"Failed to check error message. error: {e}", exc_info=True)
-            return False
+            return False, "Got unexpected error while checking error message."
     
-    async def is_disqualified_warning_active(self) -> bool:
+    async def is_disqualified_warning_active(self) -> tuple[bool, str]:
         """
         Returns True only if:
         - A qualification warning message is present on the page, AND
@@ -109,7 +109,7 @@ class UpworkJobApplication:
             warning_div = self.page.locator(warning_selector)
             if not await warning_div.is_visible():
                 logger.info("No disqualification warning message found.")
-                return False
+                return False, ""
             
             warning_text = await warning_div.text_content() or "No message found."
             logger.warning(f"Disqualification warning detected: {warning_text.strip()}")
@@ -117,11 +117,11 @@ class UpworkJobApplication:
             submit_btn = self.page.locator(submit_btn_selector)
             if await submit_btn.count() == 0:
                 logger.warning("Submit button not found.")
-                return False
+                return False, ""
 
             if await submit_btn.is_enabled():
                 logger.info("Submit button is enabled despite warning. Not disqualified.")
-                return False
+                return False, ""
             
             logger.info("Disqualified: warning present and submit button is disabled.")
 
@@ -131,11 +131,11 @@ class UpworkJobApplication:
             await self.page.screenshot(path=screenshot_dir, full_page=True, timeout=30000, type="png")
             logger.info(f"Screenshot saved at {screenshot_dir}")
 
-            return True
+            return True, warning_text.strip()
 
         except Exception as e:
             logger.error(f"Error during disqualification check. error: {e}", exc_info=True)
-            return False
+            return False, ""
 
     async def extract_job_details(self, html:str) -> dict:
         """
@@ -353,7 +353,7 @@ class UpworkJobApplication:
         except Exception as e:
             logger.error(f"Error while handling question sections: {e}", exc_info=True)
     
-    async def verify_apply(self) -> bool:
+    async def verify_apply(self) -> tuple[bool, str]:
         """
         Verify proposal submission
         """
@@ -368,16 +368,16 @@ class UpworkJobApplication:
 
             if alert_visible or edit_btn_visible:
                 logger.info("Proposal submitted successfully.")
-                return True
+                return True, ""
             else:
                 logger.warning("Failed to submit proposal.")
-                return False
+                return False, "Proposal submission verification failed."
 
         except Exception as e:
             logger.error(f"Failed to verify application successful apply: {e}", exc_info=True)
-            return False
+            return False, "Error during application verification."
 
-    async def handle_hourly_rate_form(self, hourly_rate:float, cover_letter:str, answers:dict) -> bool:
+    async def handle_hourly_rate_form(self, hourly_rate:float, cover_letter:str, answers:dict) -> tuple[bool, str]:
         """
         Fill and submit the hourly-rate-based job application form.
         """
@@ -423,9 +423,9 @@ class UpworkJobApplication:
             return await self.verify_apply()
         except Exception as e:
             logger.error(f"Error filling hourly rate form: {e}", exc_info=True)
-            return False
+            return False, "Error occurred while filling hourly rate form."
     
-    async def handle_bid_form(self, cover_letter:str, answers:dict, bid_price:float|None=None) -> bool:
+    async def handle_bid_form(self, cover_letter:str, answers:dict, bid_price:float|None=None) -> tuple[bool, str]:
         """
         Fill and submit bid based job application form
         """
@@ -486,9 +486,11 @@ class UpworkJobApplication:
             return await self.verify_apply()
         except Exception as e:
             logger.error(f"Error filling milestone form: {e}", exc_info=True)
-            return False
+            return False, "Error occurred while filling milestone form."
 
-    async def handle_project_milestone_form(self, cover_letter:str, answers:dict, bid_price:float|None=None) -> bool:
+    async def handle_project_milestone_form(
+        self, cover_letter:str, answers:dict, bid_price:float|None=None
+    ) -> tuple[bool, str]:
         """
         Fill and submit the milestone/project-based job application form.
         """
@@ -505,9 +507,11 @@ class UpworkJobApplication:
             return await self.handle_bid_form(cover_letter, answers, bid_price)
         except Exception as e:
             logger.error(f"Error filling milestone form: {e}", exc_info=True)
-            return False
+            return False, "Error occurred while filling milestone form."
     
-    async def fill_form(self, hourly_rate:float, cover_letter:str, answers:dict, bid_price:int|None=None) -> bool:
+    async def fill_form(
+        self, hourly_rate:float, cover_letter:str, answers:dict, bid_price:int|None=None
+    ) -> tuple[bool,str]:
         """
         Decide which form is present and fill accordingly.
         """
@@ -531,11 +535,11 @@ class UpworkJobApplication:
                 screenshot_path = paths.SCREENSHOTS_DIR / f"form_not_found_{timestamp}.png"
                 await self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
                 logger.info(f"Screenshot saved at {screenshot_path}")
-                return False
+                return False, "Could not identify job form structure."
             
         except Exception as e:
             logger.error(f"Error filling job form: {e}", exc_info=True)
-            return False
+            return False, "Error occurred while filling the job form."
     
     async def job_apply(
             self, 
@@ -543,7 +547,7 @@ class UpworkJobApplication:
             user:UserConfig,  
             attachment_link:str|None=None, 
             project_bid_amount:float|None=None
-    ) -> bool:
+    ) -> tuple[bool, str]:
         """
         Main method to apply for a job.
         """
@@ -581,50 +585,51 @@ class UpworkJobApplication:
                     current_wait_time+=wait_time_to_load_page
                     await self.page.wait_for_timeout(wait_time_to_load_page)
 
-
-            if await self.check_error_message():
+            error_visible, error_msg = await self.check_error_message()
+            if error_visible:
                 logger.info("Error message on the page. Exiting job apply process.")
-                return False
+                return False, error_msg
             
             await self.set_proposal_type()
             
-            if await self.is_disqualified_warning_active():
+            disqualified_visible, warning_msg = await self.is_disqualified_warning_active()
+            if disqualified_visible:
                 logger.info(
                     "Disqualified message present with button being disabled. Exiting job apply process."
                 )
-                return False
+                return False, warning_msg
 
             job_details = await self.get_job_details()
             if not bool(job_details):
-                return False
+                return False, "Failed to extract job details."
             
             proposal = generate_proposal(job_details, attachment_file_path)
             if not proposal:
                 logger.info("Failed to generate proposal. Exiting apply process.")
-                return False
+                return False, "Failed to generate proposal."
 
             relevant_job = proposal.get("relevant_job", False)
             if not relevant_job:
                 logger.info("Job is not relevant. Exititng apply process.")
-                return False
+                return False, "Job marked as not relevant by AI."
             
             answers = proposal.get("question_answers", {})
             cover_letter = proposal.get("response", "")
 
             hourly_rate = user.hourly_rate
 
-            applied_successfully = await self.fill_form(hourly_rate, cover_letter, answers, project_bid_amount)
+            applied_successfully, apply_error = await self.fill_form(hourly_rate, cover_letter, answers, project_bid_amount)
             await self.page.wait_for_timeout(random.uniform(2.91, 3.53)*1000)
 
             if applied_successfully:
                 logger.info(f"Successfully submitted proposal for {url}")
-                return True
+                return True, ""
             else:
                 logger.info(f"Failed to submit proposal for {url}")
-                return False
+                return False, apply_error
         except Exception as e:
             logger.error(f"Job application failed for {url}: {e}")
-            return False
+            return False, "Unexpected error during job application."
 
 
 if __name__ == '__main__':
