@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from config import paths
-
+from services.google_service import batch_append_jobs, batch_update_by_key
 
 logger = logging.getLogger(__name__)
 
@@ -168,3 +168,57 @@ async def save_scraped_jobs(jobs_data:list[dict], file_dir:Path|None=None):
     
     except Exception as e:
         logger.error(f"Error while saving scraped data: {e}", exc_info=True)
+
+async def deduplicate_scraped_jobs(jobs_data:list[dict]) -> list[dict] | list:
+    """Deduplicate scraped jobs based on job link."""
+    try:
+        unique_jobs = []
+        with open(paths.APPLIED_JOBS_FILE, 'r') as f:
+            applied_links = {line.strip() for line in f if line.strip() and not line.startswith('(')}
+        
+        for job in jobs_data:
+            link = job.get("link")
+            if link and link not in applied_links:
+                unique_jobs.append(job)
+        
+        logger.info(f"Deduplicated jobs: {len(jobs_data)} -> {len(unique_jobs)}")
+        return unique_jobs
+    except Exception as e:
+        logger.error(f"Error during deduplication: {e}", exc_info=True)
+        return jobs_data
+
+async def save_jobs_to_sheet(jobs_data:list[dict]):
+    """Save scraped jobs data to Google Sheets"""
+    try:
+        from config import bot_settings
+        spreadsheet_id = bot_settings.SPREADSHEET_ID
+        sheet_name = bot_settings.JOBS_SHEET_NAME
+
+        if not jobs_data:
+            logger.info("No job data to save to sheet.")
+            return
+        
+        new_jobs = await deduplicate_scraped_jobs(jobs_data)
+
+        data = batch_append_jobs(spreadsheet_id, sheet_name, new_jobs)
+        logger.info(f"Appended jobs to Google Sheet. Append response data: {data}")
+
+    except Exception as e:
+        logger.error(f"Error while saving jobs to Google Sheets: {e}", exc_info=True)
+
+async def update_job_in_sheet(updates:list[dict]):
+    """Batch update jobs in Google Sheets based on a list of updates."""
+    try:
+        from config import bot_settings
+        spreadsheet_id = bot_settings.SPREADSHEET_ID
+        sheet_name = bot_settings.JOBS_SHEET_NAME
+
+        if not updates:
+            logger.info("No updates to apply to sheet.")
+            return
+
+        data = batch_update_by_key(spreadsheet_id, sheet_name, updates)
+        logger.info(f"Updated jobs in Google Sheet. Update response data: {data}")
+
+    except Exception as e:
+        logger.error(f"Error while updating jobs in Google Sheets: {e}", exc_info=True)
