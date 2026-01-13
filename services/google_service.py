@@ -1,6 +1,8 @@
 import logging
 from functools import lru_cache
 from pathlib import Path
+from datetime import date
+from typing import Iterable, Any
 
 import pandas as pd
 from google.oauth2 import service_account
@@ -12,7 +14,29 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SERVICE_ACCOUNT_FILE = BASE_DIR / "upwork-bot-service-account.json"
+
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+COLUMN_MAP: dict[str, str] = {
+    "scrap_date": "A",
+    "job_id": "B",
+    "job_title": "C",
+    "job_description": "D",
+    "job_link": "E",
+    "job_type": "F",
+    "experience_level": "G",
+    "estimated_budget": "H",
+    "hourly_rate": "I",
+    "duration": "J",
+    "keywords": "K",
+    "activity_data": "L",
+    "client_data": "M",
+    "filter_by": "N",
+    "filter_reason": "O",
+    "status": "P",
+    "applied_by": "Q",
+    "apply_failed_reason": "R",
+}
 
 
 def normalize_header(header: str) -> str:
@@ -30,23 +54,49 @@ def normalize_header(header: str) -> str:
         .replace(" ", "_")
     )
 
+def validate_columns(columns: Iterable[str]) -> None:
+    """Ensure all columns exist in COLUMN_MAP."""
+    unknown = set(columns) - COLUMN_MAP.keys()
+    if unknown:
+        raise ValueError(f"Unknown columns: {', '.join(unknown)}")
 
+def normalize_job_row(job: dict[str, Any]) -> list[Any]:
+    """
+    Convert scraped job dict to ordered sheet row.
+    """
+    job_id = str(job.get("job_id", "")).replace("~", "")
+
+    return [
+        date.today().isoformat(),
+        job_id,
+        job.get("title", ""),
+        job.get("description", ""),
+        job.get("link", ""),
+        job.get("job_type", ""),
+        job.get("experience_level", ""),
+        job.get("estimated_budget", 0),
+        job.get("hourly_rate", 0),
+        job.get("duration", ""),
+        ", ".join(job.get("keywords", [])),
+    ]
+
+@lru_cache(maxsize=1)
 def get_google_sheets_service(
-    service_account_file: Path | str | None = None,
+    service_account_file: Path | str = SERVICE_ACCOUNT_FILE
 ) -> Resource:
     """
-    Create and return a Google Sheets API service.
+    Create and cache Google Sheets API service.
     """
-    service_account_file = service_account_file or SERVICE_ACCOUNT_FILE
-
     try:
         creds = service_account.Credentials.from_service_account_file(
             service_account_file,
             scopes=SCOPES,
         )
-        return build("sheets", "v4", credentials=creds)
-    except Exception as exc:
-        logger.exception(f"Failed to create Google Sheets service. error: {exc}")
+        service = build("sheets", "v4", credentials=creds)
+        logger.info("Google Sheets service initialized")
+        return service
+    except Exception:
+        logger.exception("Failed to initialize Google Sheets service")
         raise
 
 
@@ -54,14 +104,14 @@ def get_google_sheets_service(
 def fetch_sheet_values(
     spreadsheet_id: str,
     range_name: str,
-) -> list[list]:
+) -> list[list[Any]]:
     """
-    Fetch raw values from Google Sheets.
+    Fetch raw values from a sheet range.
     """
     service = get_google_sheets_service()
 
     try:
-        result = (
+        response = (
             service.spreadsheets()
             .values()
             .get(
@@ -71,15 +121,15 @@ def fetch_sheet_values(
             )
             .execute()
         )
-        return result.get("values", [])
+        return response.get("values", [])
     except HttpError:
-        logger.exception("Google Sheets API error")
+        logger.exception("Failed to fetch sheet values")
         return []
 
 
-def parse_sheet_to_df(values: list[list]) -> pd.DataFrame:
+def parse_sheet_to_df(values: list[list[Any]]) -> pd.DataFrame:
     """
-    Convert raw sheet values to DataFrame.
+    Convert raw sheet values into a DataFrame.
     """
     if not values:
         return pd.DataFrame()
@@ -93,30 +143,229 @@ def parse_sheet_to_df(values: list[list]) -> pd.DataFrame:
 def get_sheet_data(
     spreadsheet_id: str,
     range_name: str,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
-    Fetch Google Sheet data as list of dicts.
+    Fetch sheet data as list of dictionaries.
     """
+    values = fetch_sheet_values(spreadsheet_id, range_name)
+    df = parse_sheet_to_df(values)
+    return df.to_dict(orient="records")
+
+
+def build_row_index_by_column(
+    service: Resource,
+    spreadsheet_id: str,
+    sheet_name: str,
+    column_name: str,
+) -> dict[str, int]:
+    """
+    Build a value -> row_number index for a column.
+    """
+    validate_columns([column_name])
+
+    col = COLUMN_MAP[column_name]
+    range_name = f"{sheet_name}!{col}:{col}"
+
     try:
-        values = fetch_sheet_values(spreadsheet_id, range_name)
-        df = parse_sheet_to_df(values)
-        return df.to_dict(orient="records")
-    except Exception:
-        logger.exception("Failed to fetch sheet data")
-        return []
+        response = (
+            service.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=range_name)
+            .execute()
+        )
+
+        values = response.get("values", [])
+        return {
+            row[0]: idx
+            for idx, row in enumerate(values, start=1)
+            if row
+        }
+    except HttpError:
+        logger.exception("Failed to build row index")
+        return {}
+
+def _batch_update(
+    service: Resource,
+    spreadsheet_id: str,
+    data: list[dict[str, Any]],
+) -> dict:
+    """
+    Execute batchUpdate request.
+    """
+    if not data:
+        logger.info("No updates to apply")
+        return {}
+
+    try:
+        response = (
+            service.spreadsheets()
+            .values()
+            .batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={
+                    "valueInputOption": "USER_ENTERED",
+                    "data": data,
+                },
+            )
+            .execute()
+        )
+        logger.info("Batch update successful | cells=%s", len(data))
+        return response
+    except HttpError:
+        logger.exception("Batch update failed")
+        raise
+
+def update_row_by_key(
+    spreadsheet_id: str,
+    sheet_name: str,
+    key_column: str,
+    key_value: str,
+    updates: dict[str, Any],
+    service: Resource|None = None,
+) -> dict|None:
+    """
+    Update columns for a single row identified by key.
+    """
+    validate_columns([key_column, *updates.keys()])
+
+    service = service or get_google_sheets_service()
+    row_map = build_row_index_by_column(
+        service, spreadsheet_id, sheet_name, key_column
+    )
+
+    row = row_map.get(key_value)
+    if not row:
+        logger.warning("Row not found | %s=%s", key_column, key_value)
+        return None
+
+    data = [
+        {
+            "range": f"{sheet_name}!{COLUMN_MAP[col]}{row}",
+            "values": [[value]],
+        }
+        for col, value in updates.items()
+    ]
+
+    return _batch_update(service, spreadsheet_id, data)
+
+def batch_update_by_key(
+    spreadsheet_id: str,
+    sheet_name: str,
+    updates: list[dict[str, Any]],
+    key_column: str = "job_link",
+    service: Resource|None = None,
+) -> dict:
+    """
+    Batch update rows identified by a key column.
+    """
+    service = service or get_google_sheets_service()
+    row_map = build_row_index_by_column(
+        service, spreadsheet_id, sheet_name, key_column
+    )
+
+    data: list[dict[str, Any]] = []
+
+    for item in updates:
+        key_value = item["key"]
+        values = item["values"]
+
+        validate_columns(values.keys())
+
+        row = row_map.get(key_value)
+        if not row:
+            logger.warning("Skipping missing row | %s=%s", key_column, key_value)
+            continue
+
+        for col, value in values.items():
+            data.append({
+                "range": f"{sheet_name}!{COLUMN_MAP[col]}{row}",
+                "values": [[value]],
+            })
+
+    return _batch_update(service, spreadsheet_id, data)
+
+
+def batch_append_jobs(
+    spreadsheet_id: str,
+    sheet_name: str,
+    jobs: list[dict[str, Any]],
+    service: Resource|None = None,
+) -> dict:
+    """
+    Append multiple job rows.
+    """
+    if not jobs:
+        logger.info("No jobs provided for append")
+        return {}
+    
+    rows = [normalize_job_row(job) for job in jobs]
+    service = service or get_google_sheets_service()
+
+    try:
+        response = (
+            service.spreadsheets()
+            .values()
+            .append(
+                spreadsheetId=spreadsheet_id,
+                range=f"{sheet_name}!A1",
+                valueInputOption="USER_ENTERED",
+                insertDataOption="INSERT_ROWS",
+                body={"values": rows},
+            )
+            .execute()
+        )
+        logger.info(f"Appended {len(rows)} job(s) to Google Sheet: {sheet_name}")
+        return response
+    except HttpError:
+        logger.exception("Failed to append jobs")
+        raise
 
 
 if __name__ == '__main__':
     import os
     from dotenv import load_dotenv
+    import json
 
     load_dotenv()
     
     SPREADSHEET_ID = os.getenv('GOOGLE_SHEETS_SPREADSHEET_ID')
     RANGE_NAME = 'user config!A1:H10'
+    SHEET_NAME = "upwork_jobs"
 
     service = get_google_sheets_service()
     # Example of reading data
-    data = get_sheet_data(SPREADSHEET_ID, RANGE_NAME)
+    # data = get_sheet_data(SPREADSHEET_ID, RANGE_NAME)
+    # Example of appending jobs
+    # BASE_PATH = Path(__file__).resolve().parent.parent
+    # SAMPLE_JOBS_FILE = BASE_PATH / "scraped_data.json"
+
+    # with open(SAMPLE_JOBS_FILE, 'r') as f:
+    #     jobs_data = json.load(f)
+    
+    # data = batch_append_jobs(SPREADSHEET_ID, SHEET_NAME, jobs_data)
+
+    job_link_1 = "https://www.upwork.com/jobs/Phone-Number-Lists_~022010921100198862684/?referrer_url_path=/nx/search/jobs/"
+    update_1 = {
+        "activity_data": "{}",
+        "client_data": "{}",
+    }
+    job_link_2 = "https://www.upwork.com/jobs/Phone-Number-Lists_~022010921100198862684/?referrer_url_path=/nx/search/jobs/"
+    update_2 = {
+        "filter_by": "filter_2 - max proposal exceeded",
+        "filter_reason": "Max Proposals: 50 exceeds or equal to allowed max proposals: 50",
+        "status": "skipped"
+    }
+    updates = [
+        {
+            "key": job_link_1,
+            "values": update_1
+        },
+        {
+            "key": job_link_2,
+            "values": update_2
+        }
+    ]
+    # # data = update_row_by_key(SPREADSHEET_ID, SHEET_NAME, "job_link", job_link_1, update_1)
+    data = batch_update_by_key(SPREADSHEET_ID, SHEET_NAME, updates)
     # if data:
     print(data)
