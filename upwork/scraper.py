@@ -10,7 +10,7 @@ from config import paths, bot_settings, constants
 from upwork.parser import JobHtmlParser
 from upwork.selectors import JobCardSelectors
 from utils import save_scraped_jobs
-
+from utils.job_stats import save_jobs_to_sheet
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,7 @@ class JobScraper:
         logger.info(f"Scraped Jobs : {jobs}")
         await self.save_to_json(jobs, "scraped_jobs_data.json")
         await save_scraped_jobs(jobs)
+        await save_jobs_to_sheet(jobs)
 
         return jobs
 
