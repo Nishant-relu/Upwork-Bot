@@ -10,6 +10,7 @@ from config import bot_settings, paths
 from config.schema import UserConfig
 from upwork.parser import JobHtmlParser
 from utils import save_job_filter_stats, save_url
+from utils.job_stats import update_job_in_sheet
 
 from .auth import UpworkLoginManager
 from .selectors import UpworkJobDetailSelectors
@@ -58,6 +59,7 @@ class JobFilter:
             'total_jobs_after_filter_1':0,
             'total_jobs_after_filter_2':0
         }
+        self.google_sheet_updates = []
     
     async def _fetch_page(self, url: str) -> bool | None:
         """Fetch page from the given URL with retry logic."""
@@ -119,6 +121,16 @@ class JobFilter:
             self.counters['skipped_filter1']['total'] += 1
             self.counters['skipped_filter1']['cost'] += 1
 
+            update = {
+                "key": link,
+                "values": {
+                    "filter_by": "filter_1 - low budget",
+                    "filter_reason": f"cost: {cost} is less than fixed cost:{bot_settings.MIN_BUDGET}",
+                    "status": "skipped"
+                }
+            }
+            self.google_sheet_updates.append(update)
+
             await save_url(job_data['link'], f"cost: {cost} is less than fixed cost:{bot_settings.MIN_BUDGET}")
             logger.info("Link saved to text File.")
             logger.info(
@@ -130,6 +142,16 @@ class JobFilter:
             if keyword in job_data.get('keywords', []):
                 self.counters['skipped_filter1']['total'] += 1
                 self.counters['skipped_filter1']['keyword'] += 1
+
+                update = {
+                    "key": link,
+                    "values": {
+                        "filter_by": "filter_1 - forbidden keyword",
+                        "filter_reason": f"Contains keyword: {keyword}",
+                        "status": "skipped"
+                    }
+                }
+                self.google_sheet_updates.append(update)
 
                 await save_url(job_data['link'], f"Contains keyword: {keyword}")
                 logger.info("Link saved to text File.")
@@ -146,6 +168,16 @@ class JobFilter:
             self.counters['skipped_filter2']['total'] += 1
             self.counters['skipped_filter2']['total_spent'] += 1
 
+            update = {
+                "key": link,
+                "values": {
+                    "filter_by": "filter_2 - no total spent info",
+                    "filter_reason": "Total Spent info not given in About Client Data",
+                    "status": "skipped"
+                }
+            }
+            self.google_sheet_updates.append(update)
+
             await save_url(link, "Skipped No Total Spent info")
             logger.info(f"Skipped link: {link} ")
             logger.info("Link saved to text File.")
@@ -156,6 +188,16 @@ class JobFilter:
             self.counters['skipped_filter2']['total'] += 1
             self.counters['skipped_filter2']['less_than_min_spent'] += 1
 
+            update = {
+                "key": link,
+                "values": {
+                    "filter_by": "filter_2 - less than min total spent",
+                    "filter_reason": f"Total Spent: {client_data['total spent']} is less than Min Total Spent: {min_spent}",
+                    "status": "skipped"
+                }
+            }
+            self.google_sheet_updates.append(update)
+
             await save_url(link, "Skipped Less Total Spent")
             logger.info(f"Skipped link: {link} ")
             logger.info("Link saved to text File.")
@@ -165,6 +207,16 @@ class JobFilter:
         if "hourly rate" not in client_data.keys():
             self.counters['skipped_filter2']['total'] += 1
             self.counters['skipped_filter2']['hourly_rate'] += 1
+
+            update = {
+                "key": link,
+                "values": {
+                    "filter_by": "filter_2 - no avg. client hourly rate info",
+                    "filter_reason": "Avg. Client Hourly rate info not given in About Client Data",
+                    "status": "skipped"
+                }
+            }
+            self.google_sheet_updates.append(update)
 
             await save_url(link, "Skipped No Avg Hourly rate")
             logger.info(f"Skipped link: {link} ")
@@ -177,6 +229,16 @@ class JobFilter:
             if client_data['location'].lower() in banned_countries:
                 self.counters['skipped_filter2']['total'] += 1
                 self.counters['skipped_filter2']['location'] += 1
+
+                update = {
+                    "key": link,
+                    "values": {
+                        "filter_by": "filter_2 - banned location",
+                        "filter_reason": f"Location: {client_data['location']} is in banned locations list.",
+                        "status": "skipped"
+                    }
+                }
+                self.google_sheet_updates.append(update)
 
                 await save_url(link, "Skipped Banned location.")
                 logger.info(f"Skipped link: {link} ")
@@ -234,10 +296,29 @@ class JobFilter:
             body_html = await self.page.content()
             logger.info(f"current page html: {body_html} \n")
             activity_data = {}
-        
+
+        update = {
+            "key": link,
+            "values": {
+                "activity_data": json.dumps(activity_data),
+                "client_data": json.dumps(client_data),
+            }
+        }
+        self.google_sheet_updates.append(update)
+
         if not activity_data and not client_data:
             self.counters['skipped_filter2']['total'] += 1
             self.counters['skipped_filter2']['no_activity_client_data'] += 1
+
+            update = {
+                "key": link,
+                "values": {
+                    "filter_by": "filter_2 - no activity & client data",
+                    "filter_reason": "Both Activity Data and About Client Data not found on Job Detail Page",
+                    "status": "skipped"
+                }
+            }
+            self.google_sheet_updates.append(update)
 
             await save_url(link, "Skipped No Activity and Client Data")
             logger.info(f"Skipped link: {link} ")
@@ -248,6 +329,16 @@ class JobFilter:
         if activity_data and not client_data:
             self.counters['skipped_filter2']['total'] += 1
             self.counters['skipped_filter2']['no_client_data'] += 1
+
+            update = {
+                "key": link,
+                "values": {
+                    "filter_by": "filter_2 - no about client data",
+                    "filter_reason": "About Client Data not found on Job Detail Page",
+                    "status": "skipped"
+                }
+            }
+            self.google_sheet_updates.append(update)
 
             await save_url(link, "Skipped No About Client Data")
             logger.info(f"Skipped link: {link} ")
@@ -264,6 +355,16 @@ class JobFilter:
                 self.counters['skipped_filter2']['total'] += 1
                 self.counters['skipped_filter2']['proposal'] += 1
 
+                update = {
+                    "key": link,
+                    "values": {
+                        "filter_by": "filter_2 - no proposals info",
+                        "filter_reason": "No Proposals info found in Activity Data",
+                        "status": "skipped"
+                    }
+                }
+                self.google_sheet_updates.append(update)
+
                 await save_url(link, "Skipped No Proposals info found.")
                 logger.info(f"Skipped link: {link} ")
                 logger.info("Link saved to text File.")
@@ -276,6 +377,16 @@ class JobFilter:
             ):
                 self.counters['skipped_filter2']['total'] += 1
                 self.counters['skipped_filter2']['max_proposal'] += 1
+
+                update = {
+                    "key": link,
+                    "values": {
+                        "filter_by": "filter_2 - max proposal exceeded",
+                        "filter_reason": f"Max Proposals: {activity_data['Proposals:']['max']} exceeds or equal to allowed max proposals: {bot_settings.MAX_PROPOSAL}",
+                        "status": "skipped"
+                    }
+                }
+                self.google_sheet_updates.append(update)
 
                 await save_url(link, "Skipped Max Proposal Exceeded")
                 logger.info(f"Skipped link: {link} ")
@@ -297,6 +408,16 @@ class JobFilter:
         data['estimated_budget'] = job_data.get('estimated_budget')
         data['hourly_rate'] = job_data.get('hourly_rate')
         data['attachments'] = attachments
+
+        update = {
+            "key": link,
+            "values": {
+                "filter_by": "passed all filters",
+                "filter_reason": "N/A",
+                "status": "passed"
+            }
+        }
+        self.google_sheet_updates.append(update)
 
         return data
 
@@ -364,6 +485,8 @@ class JobFilter:
             
             logger.info("Saving Filtered jobs stats....")
             await save_job_filter_stats(self.counters)
+            if self.google_sheet_updates:
+                await update_job_in_sheet(self.google_sheet_updates)
 
             logger.info(f"Filtering Summary: {self.counters}")
             logger.info(f"Filtered Job Data : {filtered_jobs}")
