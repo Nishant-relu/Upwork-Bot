@@ -35,7 +35,7 @@ COLUMN_MAP: dict[str, str] = {
     "filter_reason": "O",
     "status": "P",
     "applied_by": "Q",
-    "apply_failed_reason": "R",
+    # "apply_failed_reason": "R",
 }
 
 

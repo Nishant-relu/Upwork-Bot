@@ -119,7 +119,7 @@ async def attempt_job_application(
             "values": {
                 "status": "application_failed",
                 "applied_by": user.name,
-                "apply_failed_reason": error
+                # "apply_failed_reason": error
             }
         }
         google_sheet_updates.append(update)
