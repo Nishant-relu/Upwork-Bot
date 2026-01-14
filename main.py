@@ -2,7 +2,7 @@ import logging
 
 # import random
 # import time
-from patchright.async_api import async_playwright
+from patchright.async_api import async_playwright, TimeoutError
 
 # from browser import PatchrightBrowser
 from browser.context import ContextHandler
@@ -103,7 +103,7 @@ async def attempt_job_application(
         if success:
             logger.info(f"[{user.name}] Successfully applied to {apply_link} \n\n")
             await save_url(link, f"Successfully applied for job using {user}")
-            await save_job_apply_stats(user, link, invitation_job_apply)
+            await save_job_apply_stats(user.name, link, invitation_job_apply)
             update = {
                 "key": link,
                 "values": {
@@ -124,7 +124,7 @@ async def attempt_job_application(
         }
         google_sheet_updates.append(update)
 
-        await save_url(link, f"Failed to apply for job using {user}", debug=True)
+        await save_url(link, f"Failed to apply for job using {user.name}", debug=True)
         logger.warning(f"[{user.name}] Failed to apply to {apply_link} \n\n")
         return False
     except Exception as e:
@@ -208,6 +208,7 @@ async def scrape_and_filter_jobs(user: UserConfig | None = None) -> list[dict]:
     
     try:
         all_jobs = []
+        filtered_jobs = []
         
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(channel='chrome',headless=False, proxy=proxy)
@@ -232,9 +233,12 @@ async def scrape_and_filter_jobs(user: UserConfig | None = None) -> list[dict]:
             await context_handler.destroy()
 
             return filtered_jobs or []
+    except TimeoutError as err:
+        logger.error(f"Got an timeout error while scraping/ filtering for user '{user.name}': {err}", exc_info=True)
+        return filtered_jobs or []
     except Exception as e:
         logger.error(f"Error during job scraping/filtering for user '{user.name}': {e}", exc_info=True)
-        return []
+        return filtered_jobs or []
 
 
 async def main():
