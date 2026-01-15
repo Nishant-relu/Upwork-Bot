@@ -64,7 +64,7 @@ class JobScraper:
     async def scrape_jobs(self, url: str|None = None) -> list:
         """Scrape job listings from the given URL or default Upwork job URL."""
 
-        link = url or constants.UPWORK_JOBS_SEARCH_URL
+        link = url or bot_settings.SEARCH_URL
         page_content = await self._fetch_page(link)
 
         if not page_content:
