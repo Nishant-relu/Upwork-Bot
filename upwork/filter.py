@@ -372,8 +372,7 @@ class JobFilter:
                 return data
             
             if (
-                activity_data["Proposals:"]["max"] != 1000
-                and activity_data["Proposals:"]["max"] >= bot_settings.MAX_PROPOSAL
+                activity_data["Proposals:"]["max"] > bot_settings.MAX_PROPOSAL
             ):
                 self.counters['skipped_filter2']['total'] += 1
                 self.counters['skipped_filter2']['max_proposal'] += 1
@@ -382,7 +381,7 @@ class JobFilter:
                     "key": link,
                     "values": {
                         "filter_by": "filter_2 - max proposal exceeded",
-                        "filter_reason": f"Max Proposals: {activity_data['Proposals:']['max']} exceeds or equal to allowed max proposals: {bot_settings.MAX_PROPOSAL}",
+                        "filter_reason": f"Max Proposals: {activity_data['Proposals:']['max']} exceeds allowed max proposals: {bot_settings.MAX_PROPOSAL}",
                         "status": "skipped"
                     }
                 }
@@ -511,7 +510,8 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "subham"
+    worker_user = bot_settings.get_worker_user()
+    name = worker_user.name
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
     
@@ -534,10 +534,10 @@ if __name__ == '__main__':
             page = await context.new_page()
             
             filter = JobFilter(page)
-            data = await filter.filter_jobs(all_jobs, name)
+            data = await filter.filter_jobs(all_jobs, worker_user)
 
         if data:
-            with open("filtered_data_3.json", 'w') as f:
+            with open("filtered_data_5.json", 'w') as f:
                 json.dump(data, f, indent=4)
             
             print("saved filtered job data.")
