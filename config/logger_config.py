@@ -1,9 +1,15 @@
 import logging
 import logging.config
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from .paths import paths
 
+
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
+
+def ist_time_converter(seconds: float):
+    return datetime.fromtimestamp(seconds, tz=INDIA_TZ).timetuple()
 
 def configure_logging() -> None:
     """
@@ -13,7 +19,7 @@ def configure_logging() -> None:
     if getattr(configure_logging, "_configured", False):
         return
 
-    now = datetime.now()
+    now = datetime.now(INDIA_TZ)
     log_dir = paths.LOGS_DIR / now.strftime("%Y-%m-%d")
     log_dir.mkdir(parents=True, exist_ok=True)
     log_filename = log_dir / f"{now.strftime('%Y-%m-%d-%H-%M-%S')}.log"
@@ -24,7 +30,8 @@ def configure_logging() -> None:
         "formatters": {
             "standard": {
                 "format": "%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S"
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+                "converter": ist_time_converter
             }
         },
         "handlers": {
