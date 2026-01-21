@@ -1,8 +1,9 @@
 import logging
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from datetime import date
-from typing import Iterable, Any
+from typing import Any, Iterable
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 from google.oauth2 import service_account
@@ -14,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SERVICE_ACCOUNT_FILE = BASE_DIR / "upwork-bot-service-account.json"
+
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
@@ -65,9 +68,11 @@ def normalize_job_row(job: dict[str, Any]) -> list[Any]:
     Convert scraped job dict to ordered sheet row.
     """
     job_id = str(job.get("job_id", "")).replace("~", "")
+    utc_now = datetime.now(timezone.utc)
+    india_now = utc_now.astimezone(INDIA_TZ).strftime("%Y-%m-%d %H:%M:%S")
 
     return [
-        date.today().isoformat(),
+        india_now,
         job_id,
         job.get("title", ""),
         job.get("description", ""),
@@ -322,9 +327,10 @@ def batch_append_jobs(
 
 
 if __name__ == '__main__':
-    import os
-    from dotenv import load_dotenv
     import json
+    import os
+
+    from dotenv import load_dotenv
 
     load_dotenv()
     
