@@ -2,6 +2,7 @@ import logging
 import random
 from enum import Enum
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 from patchright.async_api import Page, TimeoutError
@@ -13,6 +14,7 @@ from utils import download_file, format_price, generate_proposal
 
 logger = logging.getLogger(__name__)
 
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 class ProposalTypeXPath(Enum):
     FREELANCER = '//label[contains(., "As a freelancer")]'
@@ -370,7 +372,9 @@ class UpworkJobApplication:
                 logger.info("Proposal submitted successfully.")
                 return True, ""
             else:
-                logger.warning("Failed to submit proposal.")
+                screenshot_path = paths.SCREENSHOTS_DIR / f"job_verification_failed_{datetime.now(INDIA_TZ).strftime("%Y%m%d_%H%M%S")}.png"
+                self.page.screenshot(path=screenshot_path, full_page=True, timeout=60000)
+                logger.warning(f"Failed to submit proposal. screenshot saved at {screenshot_path}")
                 return False, "Proposal submission verification failed."
 
         except Exception as e:
@@ -651,7 +655,7 @@ if __name__ == '__main__':
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
     # url = "https://www.upwork.com/nx/proposals/job/~021996743581066471443/apply/"
-    url = "https://www.upwork.com/nx/proposals/job/~022007598235282144268/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~022014004179312355286/apply/"
 
     async def main():
         async with async_playwright() as playwright:

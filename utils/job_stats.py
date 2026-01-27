@@ -4,9 +4,11 @@ from datetime import datetime
 from pathlib import Path
 from config import paths
 from services.google_service import batch_append_jobs, batch_update_by_key
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 async def save_url(url: str, reason: str = "", file_path:Path|None=None, debug:bool=False):
     """
@@ -33,7 +35,7 @@ async def save_url(url: str, reason: str = "", file_path:Path|None=None, debug:b
 async def save_job_apply_stats(user:str, url:str, invitation_job:bool=False):
     """Save per day applied jobs stats"""
     try:
-        file_path = paths.APPLIED_JOBS_DIR / f"jobs_applied_{datetime.now().date()}.json"
+        file_path = paths.APPLIED_JOBS_DIR / f"jobs_applied_{datetime.now(INDIA_TZ).date()}.json"
         if not file_path.exists() or file_path.read_text().strip() == "":
             stats_data:dict = {}
         else:
@@ -97,7 +99,7 @@ async def merge_counters(d1:dict[str, int|dict], d2:dict[str, int|dict]) -> dict
 
 async def save_job_filter_stats(counters:dict):
     try:
-        file_path = paths.APPLIED_JOBS_DIR / f"filtered_jobs_stats_{datetime.now().date()}.json"
+        file_path = paths.APPLIED_JOBS_DIR / f"filtered_jobs_stats_{datetime.now(INDIA_TZ).date()}.json"
         sample_data = {
             'total_jobs': 0,
             'skipped_existing': 0,
@@ -141,7 +143,7 @@ async def save_scraped_jobs(jobs_data:list[dict], file_dir:Path|None=None):
         if file_dir:
             file_path = file_dir / f"scraped_jobs_{datetime.now().date()}.json"
         else:
-            file_path = paths.SCRAPED_JOBS_DIR / f"scraped_jobs_{datetime.now().date()}.json"
+            file_path = paths.SCRAPED_JOBS_DIR / f"scraped_jobs_{datetime.now(INDIA_TZ).date()}.json"
 
         if file_path.exists():
             try:
