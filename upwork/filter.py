@@ -2,6 +2,8 @@ import json
 import logging
 import random
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from patchright.async_api import Page
 
@@ -16,6 +18,7 @@ from .auth import UpworkLoginManager
 from .selectors import UpworkJobDetailSelectors
 
 logger = logging.getLogger(__name__)
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 
 class JobFilter:
@@ -266,6 +269,9 @@ class JobFilter:
             client_html = await self.page.locator(client_sel).inner_html()
             client_data = JobHtmlParser.parse_client_info(client_html)
         except Exception as e:
+            screenshot_path = paths.SCREENSHOTS_DIR / f"client_not_found_{datetime.now(INDIA_TZ).strftime("%Y-%m-%d_%H:%M:%S")}.png"
+            self.page.screenshot(path=screenshot_path, full_page=True, timeout=15000)
+            logger.info(f"Client data not found. Screenshot saved at {screenshot_path}")
             logger.warning(f"Client data not found: {e}", exc_info=True)
             body_html = await self.page.content()
             logger.info(f"current page html: {body_html} \n")
@@ -292,6 +298,9 @@ class JobFilter:
             activity_html = await self.page.locator(activity_sel).inner_html()
             activity_data = JobHtmlParser.parse_activity(activity_html)
         except Exception as e:
+            screenshot_path = paths.SCREENSHOTS_DIR / f"activity_not_found_{datetime.now(INDIA_TZ).strftime("%Y-%m-%d_%H:%M:%S")}.png"
+            self.page.screenshot(path=screenshot_path, full_page=True, timeout=15000)
+            logger.info(f"Activity data not found. Screenshot saved at {screenshot_path}")
             logger.warning(f"Activity data not found: {e}", exc_info=True)
             body_html = await self.page.content()
             logger.info(f"current page html: {body_html} \n")

@@ -25,7 +25,7 @@ async def save_url(url: str, reason: str = "", file_path:Path|None=None, debug:b
         
         if debug:
             with open(paths.FAILED_JOB_FILE, 'a') as f:
-                url_line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {url}"
+                url_line = f"{datetime.now(INDIA_TZ).strftime('%Y-%m-%d %H:%M:%S')} | {url}"
                 f.write(f"{url_line}\n({reason})\n" if reason else f"{url_line}\n")
 
     except Exception as e:
