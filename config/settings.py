@@ -13,11 +13,13 @@ SPREADSHEET_ID = get_env("GOOGLE_SHEETS_SPREADSHEET_ID")
 COMMON_CONFIG_SHEET_NAME = get_env("COMMON_CONFIG_RANGE_NAME")
 USER_CONFIG_SHEET_NAME = get_env("USER_CONFIG_RANGE_NAME")
 JOBS_SHEET_NAME = get_env("JOBS_SHEET_NAME")
+ACTIVITY_SHEET_NAME = get_env("ACTIVITY_SHEET_NAME")
 
 @dataclass(frozen=True)
 class Settings:
     SPREADSHEET_ID: str = SPREADSHEET_ID
     JOBS_SHEET_NAME: str = JOBS_SHEET_NAME
+    ACTIVITY_SHEET_NAME: str = ACTIVITY_SHEET_NAME
     
     SEARCH_URL: str = "https://upwork.com/nx/search/jobs/?from_recent_search=true&per_page=20&q=scraping"
     MAX_RETRY: int = 5
