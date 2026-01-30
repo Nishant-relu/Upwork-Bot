@@ -326,8 +326,195 @@ def batch_append_jobs(
         raise
 
 
+def filter_sheet_data(
+    spreadsheet_id: str,
+    range_name: str,
+    filters: dict,
+    case_sensitive: bool = False,
+) -> list[dict[str, Any]]:
+    """
+    Fetch sheet data and filter rows where column == value.
+    """
+
+    values = fetch_sheet_values(spreadsheet_id, range_name)
+    df = parse_sheet_to_df(values)
+
+    if df.empty:
+        return []
+    
+    filtered_df = df.copy()
+
+    for col, val in filters.items():
+
+        column_name = normalize_header(col)
+        if column_name not in df.columns:
+            logger.warning(f"Column '{column_name}' not found in sheet")
+            continue
+
+        series = filtered_df[column_name].astype(str)
+        value = str(val)
+
+        if not case_sensitive:
+            series = series.str.lower()
+            value = value.lower()
+
+        mask = series == value
+        
+        before_count = len(filtered_df)
+        filtered_df = filtered_df[mask]
+        after_count = len(filtered_df)
+
+        logger.info(
+            f"Filter applied: {column_name}={val} "
+            f"(rows: {before_count} → {after_count})"
+        )
+
+        if filtered_df.empty:
+            logger.info("No rows left after filtering")
+            return []
+
+    return filtered_df.to_dict(orient="records")
+
+
+def bulk_upsert_sheet_data(
+    spreadsheet_id: str,
+    sheet_name: str,
+    key_column: str,
+    records: list[dict[str, Any]]
+) -> None:
+    """
+    Bulk update or append rows in Google Sheet based on a unique key column.
+
+    Args:
+        spreadsheet_id: Google Sheet ID
+        sheet_name: Name of sheet tab (e.g., "Sheet1")
+        key_column: Column used as unique identifier (e.g., "job_id")
+        records: List of row dicts to upsert
+    """
+
+    if not records:
+        logger.info("No records provided for upsert.")
+        return
+    
+    service = get_google_sheets_service()
+    range_name = f"{sheet_name}!A1:Z"
+    values = fetch_sheet_values(spreadsheet_id, range_name)
+
+    now_str = datetime.now(INDIA_TZ).strftime("%Y-%m-%d %H:%M:%S")
+    key_column_norm = normalize_header(key_column)
+
+    if not values:
+        logger.warning("Sheet empty — creating headers and inserting rows")
+
+        headers = [
+            "job_link",
+            "account_applied_by",
+            "proposals",
+            "last_viewed_by_client",
+            "interviewing",
+            "invite_sent",
+            "unanswered_invites",
+            "hires",
+            "is_active",
+            "is_viewed_by_client",
+            "is_messaged",
+            "applied_url",
+            "created_at",
+            "updated_at",
+        ]
+
+        rows = []
+        for r in records:
+            r_norm = {normalize_header(k): v for k, v in r.items()}
+            r_norm["created_at"] = now_str
+            r_norm["updated_at"] = now_str
+            rows.append([r_norm.get(h, "") for h in headers])
+
+        service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id,
+            range=f"{sheet_name}!A1",
+            valueInputOption="RAW",
+            body={"values": [headers] + rows},
+        ).execute()
+        return
+
+    # Prepare DataFrame
+    df = parse_sheet_to_df(values)
+    headers = list(df.columns)
+
+    if key_column_norm not in headers:
+        raise ValueError(f"Key column '{key_column}' not found in sheet")
+    
+    if "created_at" not in headers or "updated_at" not in headers:
+        raise ValueError("Sheet must contain 'created_at' and 'updated_at' columns")
+
+    # Map existing rows by key
+    key_to_row_index = {
+        str(df.iloc[i][key_column_norm]): i + 2
+        for i in range(len(df))
+    }
+
+    updates, appends = [], []
+
+    for record in records:
+        record_norm = {normalize_header(k): v for k, v in record.items()}
+        key_value = str(record_norm.get(key_column_norm, ""))
+
+        row_values = []
+        for col in headers:
+            if col == "created_at":
+                if key_value in key_to_row_index:
+                    # keep original
+                    row_idx = key_to_row_index[key_value] - 2
+                    row_values.append(df.iloc[row_idx]["created_at"])
+                else:
+                    row_values.append(now_str)
+
+            elif col == "updated_at":
+                row_values.append(now_str)
+
+            else:
+                row_values.append(record_norm.get(col, ""))
+
+        if key_value in key_to_row_index:
+            row_number = key_to_row_index[key_value]
+            updates.append({
+                "range": f"{sheet_name}!A{row_number}",
+                "values": [row_values],
+            })
+        else:
+            appends.append(row_values)
+
+    try:
+        # Batch updates
+        if updates:
+            service.spreadsheets().values().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={
+                    "valueInputOption": "RAW",
+                    "data": updates,
+                },
+            ).execute()
+            logger.info(f"Updated {len(updates)} rows")
+
+        # Batch appends
+        if appends:
+            service.spreadsheets().values().append(
+                spreadsheetId=spreadsheet_id,
+                range=f"{sheet_name}!A1",
+                valueInputOption="RAW",
+                insertDataOption="INSERT_ROWS",
+                body={"values": appends},
+            ).execute()
+            logger.info(f"Appended {len(appends)} rows")
+
+    except HttpError:
+        logger.exception("Failed bulk upsert to sheet")
+        raise
+
+
 if __name__ == '__main__':
-    import json
+    # import json
     import os
 
     from dotenv import load_dotenv
@@ -350,28 +537,30 @@ if __name__ == '__main__':
     
     # data = batch_append_jobs(SPREADSHEET_ID, SHEET_NAME, jobs_data)
 
-    job_link_1 = "https://www.upwork.com/jobs/Phone-Number-Lists_~022010921100198862684/?referrer_url_path=/nx/search/jobs/"
-    update_1 = {
-        "activity_data": "{}",
-        "client_data": "{}",
-    }
-    job_link_2 = "https://www.upwork.com/jobs/Phone-Number-Lists_~022010921100198862684/?referrer_url_path=/nx/search/jobs/"
-    update_2 = {
-        "filter_by": "filter_2 - max proposal exceeded",
-        "filter_reason": "Max Proposals: 50 exceeds or equal to allowed max proposals: 50",
-        "status": "skipped"
-    }
-    updates = [
-        {
-            "key": job_link_1,
-            "values": update_1
-        },
-        {
-            "key": job_link_2,
-            "values": update_2
-        }
-    ]
-    # # data = update_row_by_key(SPREADSHEET_ID, SHEET_NAME, "job_link", job_link_1, update_1)
-    data = batch_update_by_key(SPREADSHEET_ID, SHEET_NAME, updates)
+    # job_link_1 = "https://www.upwork.com/jobs/Phone-Number-Lists_~022010921100198862684/?referrer_url_path=/nx/search/jobs/"
+    # update_1 = {
+    #     "activity_data": "{}",
+    #     "client_data": "{}",
+    # }
+    # job_link_2 = "https://www.upwork.com/jobs/Phone-Number-Lists_~022010921100198862684/?referrer_url_path=/nx/search/jobs/"
+    # update_2 = {
+    #     "filter_by": "filter_2 - max proposal exceeded",
+    #     "filter_reason": "Max Proposals: 50 exceeds or equal to allowed max proposals: 50",
+    #     "status": "skipped"
+    # }
+    # updates = [
+    #     {
+    #         "key": job_link_1,
+    #         "values": update_1
+    #     },
+    #     {
+    #         "key": job_link_2,
+    #         "values": update_2
+    #     }
+    # ]
+    # # # data = update_row_by_key(SPREADSHEET_ID, SHEET_NAME, "job_link", job_link_1, update_1)
+    # data = batch_update_by_key(SPREADSHEET_ID, SHEET_NAME, updates)
     # if data:
+    filters = {"status": "applied"}
+    data = filter_sheet_data(SPREADSHEET_ID, SHEET_NAME, filters)
     print(data)
