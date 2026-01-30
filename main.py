@@ -21,14 +21,17 @@ google_sheet_updates: list[dict] = []
 
 async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
     """
-    Categorize jobs based on client hourly rate using USER_CONFIG.
+    Categorize jobs based on rate using USER_CONFIG priority:
 
-    - Only users with account_type == 'applicant' are considered
-    - Job is assigned if:
-        min_client_hourly_rate <= client_rate < max_client_hourly_rate
+    - If job["hourly_rate"] > 0 → use that
+    - Else → fallback to client_data["hourly rate"]
+
+    Only users with account_type == 'applicant' are considered.
+    Job is assigned if:
+        min_client_hourly_rate <= rate < max_client_hourly_rate
     """
 
-    # Initialize result dynamically from applicant users
+    # Build applicant bucket dynamically
     categorized: dict[str, list[dict]] = {
         username: []
         for username, user in bot_settings.USER_CONFIG.items()
@@ -36,15 +39,30 @@ async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
     }
 
     for job in job_data:
-        client_data: dict = job.get("client_data", {})
-        hourly_rate = client_data.get("hourly rate")
-
         try:
-            if hourly_rate is None:
+            # -------------------------
+            # STEP 1: Decide which rate to use
+            # -------------------------
+            job_rate = job.get("hourly_rate", 0)
+            client_rate_raw = job.get("client_data", {}).get("hourly rate")
+
+            rate = None
+
+            # Priority 1 → job hourly rate
+            if job_rate and float(job_rate) > 0:
+                rate = float(job_rate)
+
+            # Priority 2 → client historical rate
+            elif client_rate_raw is not None:
+                rate = float(str(client_rate_raw).replace(",", "").strip())
+
+            # If still no usable rate → skip job
+            if rate is None:
                 continue
 
-            rate = float(hourly_rate)
-
+            # -------------------------
+            # STEP 2: Assign job
+            # -------------------------
             for username, user in bot_settings.USER_CONFIG.items():
                 if user.account_type.lower() != "applicant":
                     continue
@@ -54,7 +72,10 @@ async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
                     break  # stop once assigned
 
         except (ValueError, TypeError):
-            logger.warning(f"Invalid hourly rate encountered: {hourly_rate}")
+            logger.warning(
+                f"Invalid rate encountered | job_rate={job.get('hourly_rate')} "
+                f"| client_rate={client_rate_raw}"
+            )
             continue
 
     return categorized
