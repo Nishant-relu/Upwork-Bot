@@ -270,7 +270,7 @@ class JobFilter:
             client_data = JobHtmlParser.parse_client_info(client_html)
         except Exception as e:
             screenshot_path = paths.SCREENSHOTS_DIR / f"client_not_found_{datetime.now(INDIA_TZ).strftime("%Y-%m-%d_%H:%M:%S")}.png"
-            self.page.screenshot(path=screenshot_path, full_page=True, timeout=15000)
+            await self.page.screenshot(path=screenshot_path, full_page=True, timeout=15000)
             logger.info(f"Client data not found. Screenshot saved at {screenshot_path}")
             logger.warning(f"Client data not found: {e}", exc_info=True)
             body_html = await self.page.content()
@@ -299,7 +299,7 @@ class JobFilter:
             activity_data = JobHtmlParser.parse_activity(activity_html)
         except Exception as e:
             screenshot_path = paths.SCREENSHOTS_DIR / f"activity_not_found_{datetime.now(INDIA_TZ).strftime("%Y-%m-%d_%H:%M:%S")}.png"
-            self.page.screenshot(path=screenshot_path, full_page=True, timeout=15000)
+            await self.page.screenshot(path=screenshot_path, full_page=True, timeout=15000)
             logger.info(f"Activity data not found. Screenshot saved at {screenshot_path}")
             logger.warning(f"Activity data not found: {e}", exc_info=True)
             body_html = await self.page.content()
