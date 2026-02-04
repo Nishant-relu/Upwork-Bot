@@ -3,7 +3,8 @@ from .parsers import (
     ActivityParser, 
     ClientInfoParser, 
     AttachmentParser, 
-    InvitationParser
+    InvitationParser,
+    ProposalsParser
 )
 from bs4 import Tag
 
@@ -28,3 +29,7 @@ class JobHtmlParser:
     @staticmethod
     def parse_invitation_table(table_html: str) -> list:
         return InvitationParser.parse(table_html)
+    
+    @staticmethod
+    def parse_proposal_page(html:str) -> list[dict[str, str|bool|None]]:
+        return ProposalsParser.parse(html)

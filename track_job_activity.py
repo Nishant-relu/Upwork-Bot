@@ -146,8 +146,8 @@ async def run_job_activity_tracking() -> None:
     proxy = get_proxy(user.name)
     cookies = paths.COOKIES_DIR / f"{user.name}_cookies.json"
 
-    async with async_playwright() as pw:
-        browser = await pw.chromium.launch(channel="chrome", headless=False, proxy=proxy)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(channel="chrome", headless=False, proxy=proxy)
         context_handler = ContextHandler(browser, cookies)
         context = await context_handler.create()
         page = await context.new_page()
