@@ -107,7 +107,8 @@ class ClientInfoParser:
                 elif "hourly rate" in key.lower():
                     client_data["hourly rate"] = key.split()[0].replace("$", "")
                 elif "location" in key.lower():
-                    client_data["location"] = normalize_country(value.strip())
+                    normalized_country = normalize_country(value.strip())
+                    client_data["location"] = normalized_country if normalized_country else value.lower()
             
             logger.info(f"Parsed client info: {client_data}")
         except Exception as e:

@@ -187,7 +187,7 @@ class JobFilter:
             logger.info("Link was skipped as Total Spent info was not given in About Client Data.\n\n")
             return False
             
-        if int(client_data["total spent"]) < min_spent:
+        if float(client_data["total spent"]) < float(min_spent):
             self.counters['skipped_filter2']['total'] += 1
             self.counters['skipped_filter2']['less_than_min_spent'] += 1
 

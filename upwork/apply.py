@@ -261,22 +261,41 @@ class UpworkJobApplication:
                 return
 
             logger.info("Found consent form modal. Proceeding with the submit process.")
-            
 
-            checkbox_xpath = '//label[@data-test="understand-and-agree"]//span[@data-test="checkbox-input"]'
-            checkbox = self.page.locator(checkbox_xpath)
+            # --- checkbox locators (primary + fallback) ---
+            checkbox_locators = [
+                '//label[@data-test="understand-and-agree"]//span[@data-test="checkbox-input"]',
+                '//label[@data-test="checkbox-label"]//span[@data-test="checkbox-input"]',
+            ]
+
+            checkbox = None
+
+            for xpath in checkbox_locators:
+                locator = self.page.locator(xpath)
+                if await locator.count() > 0 and await locator.first.is_visible():
+                    checkbox = locator.first
+                    logger.info(f"Using checkbox xpath: {xpath}")
+                    break
+
+            if not checkbox:
+                logger.warning("Consent checkbox not found with any known selector.")
+                return
+
             await checkbox.click(timeout=10000)
 
-            await self.page.wait_for_timeout(random.uniform(2.7, 3.93)*1000)
-            
+            await self.page.wait_for_timeout(random.uniform(2.7, 3.93) * 1000)
+
             continue_button_selector = 'button[data-ev-label="fixed_price_confirmation_continue"]'
             continue_button = self.page.locator(continue_button_selector)
+
             await continue_button.click(timeout=10000)
 
-            await self.page.wait_for_timeout(random.uniform(7.7, 9.93)*1000)
+            await self.page.wait_for_timeout(random.uniform(7.7, 9.93) * 1000)
             logger.info('Clicked "I Understand" checkbox and submitted.')
+
         except Exception as e:
             logger.error(f"Error handling consent form: {e}", exc_info=True)
+
 
     async def set_proposal_type(self) -> None:
         """
@@ -373,7 +392,7 @@ class UpworkJobApplication:
                 return True, ""
             else:
                 screenshot_path = paths.SCREENSHOTS_DIR / f"job_verification_failed_{datetime.now(INDIA_TZ).strftime("%Y%m%d_%H%M%S")}.png"
-                self.page.screenshot(path=screenshot_path, full_page=True, timeout=60000)
+                await self.page.screenshot(path=screenshot_path, full_page=True, timeout=60000)
                 logger.warning(f"Failed to submit proposal. screenshot saved at {screenshot_path}")
                 return False, "Proposal submission verification failed."
 
@@ -630,6 +649,10 @@ class UpworkJobApplication:
                 return True, ""
             else:
                 logger.info(f"Failed to submit proposal for {url}")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_failed_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_path, type="png", full_page=True)
+                logger.info(f"Screenshot saved at {screenshot_path}")
                 return False, apply_error
         except Exception as e:
             logger.error(f"Job application failed for {url}: {e}")
@@ -650,12 +673,12 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "muktesh"
+    name = "naman"
     user:UserConfig = bot_settings.USER_CONFIG.get(name)
     proxy = get_proxy(name)
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
     # url = "https://www.upwork.com/nx/proposals/job/~021996743581066471443/apply/"
-    url = "https://www.upwork.com/nx/proposals/job/~022014004179312355286/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~022026125991968392383/apply/"
 
     async def main():
         async with async_playwright() as playwright:
