@@ -564,6 +564,34 @@ class UpworkJobApplication:
             logger.error(f"Error filling job form: {e}", exc_info=True)
             return False, "Error occurred while filling the job form."
     
+    async def switch_to_agency_account(self):
+        """
+        Switch to agency account if user is applying as an agency member.
+        """
+        try:
+            logger.info("Switching to agency account for applying.")
+
+            account_dropdown_selector = 'li.nav-dropdown-account > button'
+            account_dropdown = self.page.locator(account_dropdown_selector)
+
+            if await account_dropdown.is_visible(timeout=15000):
+                await account_dropdown.click()
+                account = self.page.locator('li[data-cy^="organization-"]').filter(
+                    has_text="Relu Consultancy"
+                ).filter(
+                    has_text="Agency"
+                )
+                await account.wait_for(state="visible", timeout=15000)
+                await account.click()
+
+                logger.info("Switched to agency account successfully.")
+                await self.page.wait_for_timeout(random.uniform(3.7, 5.93) * 1000)
+            else:
+                logger.warning("Switch account button not found. Cannot switch to agency account.")
+        except Exception as e:
+            logger.error(f"Error switching to agency account: {e}", exc_info=True)
+
+
     async def job_apply(
             self, 
             url:str, 
@@ -576,6 +604,10 @@ class UpworkJobApplication:
         """
 
         try:
+            if user.name == "muktesh":
+                logger.info("User is muktesh, switching to agency account for applying.")
+                await self.switch_to_agency_account()
+            
             if attachment_link is not None:
                 attachment_file_path = download_file(attachment_link)
             else:
@@ -673,12 +705,14 @@ if __name__ == '__main__':
 
     configure_logging()
 
-    name = "naman"
+    name = "muktesh"
     user:UserConfig = bot_settings.USER_CONFIG.get(name)
     proxy = get_proxy(name)
+    proxy = None
     cookies_path = paths.COOKIES_DIR / f"{name}_cookies.json"
     # url = "https://www.upwork.com/nx/proposals/job/~021996743581066471443/apply/"
-    url = "https://www.upwork.com/nx/proposals/job/~022026125991968392383/apply/"
+    # url = "https://www.upwork.com/nx/proposals/job/~022026125991968392383/apply/"
+    url = "https://www.upwork.com/nx/proposals/job/~022041554897112191435/apply/"
 
     async def main():
         async with async_playwright() as playwright:
