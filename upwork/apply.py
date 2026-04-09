@@ -297,26 +297,57 @@ class UpworkJobApplication:
             logger.error(f"Error handling consent form: {e}", exc_info=True)
 
 
-    async def set_proposal_type(self) -> None:
+    async def set_proposal_type(self, use_freelancer: bool) -> None:
         """
         Selects the proposal type (Freelancer or Agency).
         """
         try:
-            proposal_type = bot_settings.PROPOSAL_TYPE.value.upper()
+            if use_freelancer:
+                proposal_type = bot_settings.PROPOSAL_TYPE.value.upper()
 
-            logger.info(f"Setting proposal type to {proposal_type}")
-            proposal_type_xpath = ProposalTypeXPath[proposal_type].value
-            await self.page.wait_for_timeout(random.uniform(5.7, 8.9)*1000)
+                logger.info(f"Setting proposal type to {proposal_type}")
+                proposal_type_xpath = ProposalTypeXPath[proposal_type].value
+                await self.page.wait_for_timeout(random.uniform(5.7, 8.9)*1000)
 
-            checkbox = self.page.locator(proposal_type_xpath)
-            if await checkbox.is_visible(timeout=15000):
-                logger.info("Found Check box with proposals.")
-                await checkbox.wait_for(timeout=10000)
-                await checkbox.click(button="left", timeout=10000)
-                await self.page.wait_for_timeout(random.uniform(1.7, 2.93)*1000)
-                logger.info(f"Proposal type '{proposal_type}' selected.")
+                checkbox = self.page.locator(proposal_type_xpath)
+                if await checkbox.is_visible(timeout=15000):
+                    logger.info("Found Check box with proposals.")
+                    await checkbox.wait_for(timeout=10000)
+                    await checkbox.click(button="left", timeout=10000)
+                    await self.page.wait_for_timeout(random.uniform(1.7, 2.93)*1000)
+                    logger.info(f"Proposal type '{proposal_type}' selected.")
+                else:
+                    logger.info("Proposal type selection checkbox not available.")
             else:
-                logger.info("Proposal type selection checkbox not available.")
+                logger.info("Selecting team and freelancer for agency proposal...")
+                team_dropdown_selector = '.fe-proposal-settings .up-fe-team-selector [data-test="dropdown-toggle"]'
+                team_dropdown = self.page.locator(team_dropdown_selector).first
+                await team_dropdown.wait_for(state="visible", timeout=15000)
+                print("team dropdown is visible: ", await team_dropdown.is_visible())
+                await team_dropdown.click()
+
+                team_option_selector = '#dropdown-menu > li'
+                team_option = self.page.locator(team_option_selector).filter(
+                    has_text="Relu Consultancy"
+                ).first
+                await team_option.wait_for(state="visible", timeout=15000)
+                print("team option is visible: ", await team_option.is_visible())
+                await team_option.click()
+                logger.info("Selected 'Relu Consultancy' as the team for agency proposal.")
+
+                freelancer_dropdown_selector = '.fe-proposal-settings [aria-labelledby="contractor-label"]'
+                freelancer_dropdown = self.page.locator(freelancer_dropdown_selector).first
+                await freelancer_dropdown.wait_for(state="visible", timeout=15000)
+                await freelancer_dropdown.click()
+
+                freelancer_option_selector = '#dropdown-menu > li'
+                freelancer_option = self.page.locator(freelancer_option_selector).filter(
+                    has_text="Muktesh Gupta (guptamuktesh)"
+                ).first
+                await freelancer_option.wait_for(state="visible", timeout=15000)
+                await freelancer_option.click()
+                logger.info("Selected 'Muktesh Gupta (guptamuktesh)' as the freelancer for agency proposal.")   
+
         except Exception as e:
             logger.error(f"Error setting proposal type: {e}", exc_info=True)
     
@@ -437,13 +468,13 @@ class UpworkJobApplication:
             # fill question answers if available
             await self.handle_questions(answers)
             
-            submit_selector = 'div.fe-apply-footer-controls > button:first-of-type'
-            submit_button = self.page.locator(submit_selector)
-            await submit_button.scroll_into_view_if_needed()
-            await submit_button.click()
-            await self.page.wait_for_timeout(random.uniform(7.7, 9.93)*1000)
+            # submit_selector = 'div.fe-apply-footer-controls > button:first-of-type'
+            # submit_button = self.page.locator(submit_selector)
+            # await submit_button.scroll_into_view_if_needed()
+            # await submit_button.click()
+            # await self.page.wait_for_timeout(random.uniform(7.7, 9.93)*1000)
 
-            return await self.verify_apply()
+            # return await self.verify_apply()
         except Exception as e:
             logger.error(f"Error filling hourly rate form: {e}", exc_info=True)
             return False, "Error occurred while filling hourly rate form."
@@ -641,88 +672,90 @@ class UpworkJobApplication:
         """
 
         try:
+            use_freelancer = True
             if user.name == "muktesh":
                 logger.info("User is muktesh, switching to agency account for applying.")
                 await self.switch_to_agency_account()
+                use_freelancer = False
             
-            # if attachment_link is not None:
-            #     attachment_file_path = download_file(attachment_link)
-            # else:
-            #     attachment_file_path = None
+            if attachment_link is not None:
+                attachment_file_path = download_file(attachment_link)
+            else:
+                attachment_file_path = None
             
-            # logger.info(f"Opening Job Link: {url}")
-            # await self._fetch_page(url)
+            logger.info(f"Opening Job Link: {url}")
+            await self._fetch_page(url)
             
-            # max_wait_time = 20 * 1000
-            # current_wait_time = 0.0
-            # while True:
-            #     try:
-            #         error_message = self.page.locator("p.error-message-text")
-            #         if await error_message.is_visible():
-            #             logger.warning(f"Got an error message: {await error_message.text_content()}")
-            #             break
+            max_wait_time = 20 * 1000
+            current_wait_time = 0.0
+            while True:
+                try:
+                    error_message = self.page.locator("p.error-message-text")
+                    if await error_message.is_visible():
+                        logger.warning(f"Got an error message: {await error_message.text_content()}")
+                        break
 
-            #         job_detail_element = self.page.locator("div.fe-job-details")
-            #         await job_detail_element.wait_for(state="visible", timeout=60000)
-            #         break
-            #     except TimeoutError:
-            #         logger.warning("Job page not loaded waiting....")
-            #         wait_time_to_load_page = random.uniform(3.17, 5.97) * 1000
-            #         if current_wait_time >= max_wait_time:
-            #             logger.warning("Max waiting time exceded for page loading. page does not loaded. exiting..")
-            #             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            #             screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_page_load_failed_{timestamp}.png"
-            #             await self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
-            #             break
-            #         current_wait_time+=wait_time_to_load_page
-            #         await self.page.wait_for_timeout(wait_time_to_load_page)
+                    job_detail_element = self.page.locator("div.fe-job-details")
+                    await job_detail_element.wait_for(state="visible", timeout=60000)
+                    break
+                except TimeoutError:
+                    logger.warning("Job page not loaded waiting....")
+                    wait_time_to_load_page = random.uniform(3.17, 5.97) * 1000
+                    if current_wait_time >= max_wait_time:
+                        logger.warning("Max waiting time exceded for page loading. page does not loaded. exiting..")
+                        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                        screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_page_load_failed_{timestamp}.png"
+                        await self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
+                        break
+                    current_wait_time+=wait_time_to_load_page
+                    await self.page.wait_for_timeout(wait_time_to_load_page)
 
-            # error_visible, error_msg = await self.check_error_message()
-            # if error_visible:
-            #     logger.info("Error message on the page. Exiting job apply process.")
-            #     return False, error_msg
+            error_visible, error_msg = await self.check_error_message()
+            if error_visible:
+                logger.info("Error message on the page. Exiting job apply process.")
+                return False, error_msg
             
-            # await self.set_proposal_type()
+            await self.set_proposal_type(use_freelancer=use_freelancer)
             
-            # disqualified_visible, warning_msg = await self.is_disqualified_warning_active()
-            # if disqualified_visible:
-            #     logger.info(
-            #         "Disqualified message present with button being disabled. Exiting job apply process."
-            #     )
-            #     return False, warning_msg
+            disqualified_visible, warning_msg = await self.is_disqualified_warning_active()
+            if disqualified_visible:
+                logger.info(
+                    "Disqualified message present with button being disabled. Exiting job apply process."
+                )
+                return False, warning_msg
 
-            # job_details = await self.get_job_details()
-            # if not bool(job_details):
-            #     return False, "Failed to extract job details."
+            job_details = await self.get_job_details()
+            if not bool(job_details):
+                return False, "Failed to extract job details."
             
-            # proposal = generate_proposal(job_details, attachment_file_path)
-            # if not proposal:
-            #     logger.info("Failed to generate proposal. Exiting apply process.")
-            #     return False, "Failed to generate proposal."
+            proposal = generate_proposal(job_details, attachment_file_path)
+            if not proposal:
+                logger.info("Failed to generate proposal. Exiting apply process.")
+                return False, "Failed to generate proposal."
 
-            # relevant_job = proposal.get("relevant_job", False)
-            # if not relevant_job:
-            #     logger.info("Job is not relevant. Exititng apply process.")
-            #     return False, "Job marked as not relevant by AI."
+            relevant_job = proposal.get("relevant_job", False)
+            if not relevant_job:
+                logger.info("Job is not relevant. Exititng apply process.")
+                return False, "Job marked as not relevant by AI."
             
-            # answers = proposal.get("question_answers", {})
-            # cover_letter = proposal.get("response", "")
+            answers = proposal.get("question_answers", {})
+            cover_letter = proposal.get("response", "")
 
-            # hourly_rate = user.hourly_rate
+            hourly_rate = user.hourly_rate
 
-            # applied_successfully, apply_error = await self.fill_form(hourly_rate, cover_letter, answers, project_bid_amount)
-            # await self.page.wait_for_timeout(random.uniform(2.91, 3.53)*1000)
+            applied_successfully, apply_error = await self.fill_form(hourly_rate, cover_letter, answers, project_bid_amount)
+            await self.page.wait_for_timeout(random.uniform(2.91, 3.53)*1000)
 
-            # if applied_successfully:
-            #     logger.info(f"Successfully submitted proposal for {url}")
-            #     return True, ""
-            # else:
-            #     logger.info(f"Failed to submit proposal for {url}")
-            #     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            #     screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_failed_{timestamp}.png"
-            #     await self.page.screenshot(path=screenshot_path, type="png", full_page=True)
-            #     logger.info(f"Screenshot saved at {screenshot_path}")
-            #     return False, apply_error
+            if applied_successfully:
+                logger.info(f"Successfully submitted proposal for {url}")
+                return True, ""
+            else:
+                logger.info(f"Failed to submit proposal for {url}")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_failed_{timestamp}.png"
+                await self.page.screenshot(path=screenshot_path, type="png", full_page=True)
+                logger.info(f"Screenshot saved at {screenshot_path}")
+                return False, apply_error
         except Exception as e:
             logger.error(f"Job application failed for {url}: {e}")
             return False, "Unexpected error during job application."
