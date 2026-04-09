@@ -563,12 +563,39 @@ class UpworkJobApplication:
         except Exception as e:
             logger.error(f"Error filling job form: {e}", exc_info=True)
             return False, "Error occurred while filling the job form."
+
+    async def is_agency_account(self) -> bool:
+        """
+        Check if the current account is an agency account.
+        """
+        try:
+            active_account_selector = 'li.nav-user-info a[href*="/agencies/"]'
+            await self.page.wait_for_selector(active_account_selector, state="attached", timeout=60000)
+            active_account = self.page.locator(active_account_selector).first
+
+            href = await active_account.get_attribute("href")
+            name_el = active_account.locator(".nav-user-label").first
+            name = await name_el.text_content() or ""
+
+            if "/agencies/" in href and "Relu Consultancy" in name.strip():
+                logger.info(f"Current account is an agency account: {name.strip()}")
+                return True
+            else:
+                logger.warning(f"Current account is not an agency account. Found account name: {name.strip()}, href: {href.strip()}")
+                return False
+        except Exception as e:
+            logger.error(f"Error checking for agency account: {e}", exc_info=True)
+            return False
     
     async def switch_to_agency_account(self):
         """
         Switch to agency account if user is applying as an agency member.
         """
         try:
+            logger.info("Verifying if already in agency account...")
+            if await self.is_agency_account():
+                return
+
             logger.info("Switching to agency account for applying.")
 
             account_dropdown_selector = 'li.nav-dropdown-account > button'
@@ -584,8 +611,18 @@ class UpworkJobApplication:
                 await account.wait_for(state="visible", timeout=15000)
                 await account.click()
 
-                logger.info("Switched to agency account successfully.")
-                await self.page.wait_for_timeout(random.uniform(3.7, 5.93) * 1000)
+                try:
+                    await self.page.wait_for_load_state("domcontentloaded", timeout=60000)
+                except TimeoutError:
+                    logger.warning("domcontentloaded timeout continuing anyway")
+
+                await self.page.wait_for_timeout(random.uniform(3.19, 5.97) * 1000)
+                if await handle_captcha(self.page):
+                    is_agency = await self.is_agency_account()
+                    if is_agency:
+                        logger.info("Switched to agency account successfully.")
+                    else:
+                        logger.warning("Failed to switch to agency account after captcha.")
             else:
                 logger.warning("Switch account button not found. Cannot switch to agency account.")
         except Exception as e:
@@ -608,84 +645,84 @@ class UpworkJobApplication:
                 logger.info("User is muktesh, switching to agency account for applying.")
                 await self.switch_to_agency_account()
             
-            if attachment_link is not None:
-                attachment_file_path = download_file(attachment_link)
-            else:
-                attachment_file_path = None
+            # if attachment_link is not None:
+            #     attachment_file_path = download_file(attachment_link)
+            # else:
+            #     attachment_file_path = None
             
-            logger.info(f"Opening Job Link: {url}")
-            await self._fetch_page(url)
+            # logger.info(f"Opening Job Link: {url}")
+            # await self._fetch_page(url)
             
-            max_wait_time = 20 * 1000
-            current_wait_time = 0.0
-            while True:
-                try:
-                    error_message = self.page.locator("p.error-message-text")
-                    if await error_message.is_visible():
-                        logger.warning(f"Got an error message: {await error_message.text_content()}")
-                        break
+            # max_wait_time = 20 * 1000
+            # current_wait_time = 0.0
+            # while True:
+            #     try:
+            #         error_message = self.page.locator("p.error-message-text")
+            #         if await error_message.is_visible():
+            #             logger.warning(f"Got an error message: {await error_message.text_content()}")
+            #             break
 
-                    job_detail_element = self.page.locator("div.fe-job-details")
-                    await job_detail_element.wait_for(state="visible", timeout=60000)
-                    break
-                except TimeoutError:
-                    logger.warning("Job page not loaded waiting....")
-                    wait_time_to_load_page = random.uniform(3.17, 5.97) * 1000
-                    if current_wait_time >= max_wait_time:
-                        logger.warning("Max waiting time exceded for page loading. page does not loaded. exiting..")
-                        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                        screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_page_load_failed_{timestamp}.png"
-                        await self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
-                        break
-                    current_wait_time+=wait_time_to_load_page
-                    await self.page.wait_for_timeout(wait_time_to_load_page)
+            #         job_detail_element = self.page.locator("div.fe-job-details")
+            #         await job_detail_element.wait_for(state="visible", timeout=60000)
+            #         break
+            #     except TimeoutError:
+            #         logger.warning("Job page not loaded waiting....")
+            #         wait_time_to_load_page = random.uniform(3.17, 5.97) * 1000
+            #         if current_wait_time >= max_wait_time:
+            #             logger.warning("Max waiting time exceded for page loading. page does not loaded. exiting..")
+            #             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            #             screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_page_load_failed_{timestamp}.png"
+            #             await self.page.screenshot(path=screenshot_path, full_page=True, timeout=30000, type="png")
+            #             break
+            #         current_wait_time+=wait_time_to_load_page
+            #         await self.page.wait_for_timeout(wait_time_to_load_page)
 
-            error_visible, error_msg = await self.check_error_message()
-            if error_visible:
-                logger.info("Error message on the page. Exiting job apply process.")
-                return False, error_msg
+            # error_visible, error_msg = await self.check_error_message()
+            # if error_visible:
+            #     logger.info("Error message on the page. Exiting job apply process.")
+            #     return False, error_msg
             
-            await self.set_proposal_type()
+            # await self.set_proposal_type()
             
-            disqualified_visible, warning_msg = await self.is_disqualified_warning_active()
-            if disqualified_visible:
-                logger.info(
-                    "Disqualified message present with button being disabled. Exiting job apply process."
-                )
-                return False, warning_msg
+            # disqualified_visible, warning_msg = await self.is_disqualified_warning_active()
+            # if disqualified_visible:
+            #     logger.info(
+            #         "Disqualified message present with button being disabled. Exiting job apply process."
+            #     )
+            #     return False, warning_msg
 
-            job_details = await self.get_job_details()
-            if not bool(job_details):
-                return False, "Failed to extract job details."
+            # job_details = await self.get_job_details()
+            # if not bool(job_details):
+            #     return False, "Failed to extract job details."
             
-            proposal = generate_proposal(job_details, attachment_file_path)
-            if not proposal:
-                logger.info("Failed to generate proposal. Exiting apply process.")
-                return False, "Failed to generate proposal."
+            # proposal = generate_proposal(job_details, attachment_file_path)
+            # if not proposal:
+            #     logger.info("Failed to generate proposal. Exiting apply process.")
+            #     return False, "Failed to generate proposal."
 
-            relevant_job = proposal.get("relevant_job", False)
-            if not relevant_job:
-                logger.info("Job is not relevant. Exititng apply process.")
-                return False, "Job marked as not relevant by AI."
+            # relevant_job = proposal.get("relevant_job", False)
+            # if not relevant_job:
+            #     logger.info("Job is not relevant. Exititng apply process.")
+            #     return False, "Job marked as not relevant by AI."
             
-            answers = proposal.get("question_answers", {})
-            cover_letter = proposal.get("response", "")
+            # answers = proposal.get("question_answers", {})
+            # cover_letter = proposal.get("response", "")
 
-            hourly_rate = user.hourly_rate
+            # hourly_rate = user.hourly_rate
 
-            applied_successfully, apply_error = await self.fill_form(hourly_rate, cover_letter, answers, project_bid_amount)
-            await self.page.wait_for_timeout(random.uniform(2.91, 3.53)*1000)
+            # applied_successfully, apply_error = await self.fill_form(hourly_rate, cover_letter, answers, project_bid_amount)
+            # await self.page.wait_for_timeout(random.uniform(2.91, 3.53)*1000)
 
-            if applied_successfully:
-                logger.info(f"Successfully submitted proposal for {url}")
-                return True, ""
-            else:
-                logger.info(f"Failed to submit proposal for {url}")
-                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_failed_{timestamp}.png"
-                await self.page.screenshot(path=screenshot_path, type="png", full_page=True)
-                logger.info(f"Screenshot saved at {screenshot_path}")
-                return False, apply_error
+            # if applied_successfully:
+            #     logger.info(f"Successfully submitted proposal for {url}")
+            #     return True, ""
+            # else:
+            #     logger.info(f"Failed to submit proposal for {url}")
+            #     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            #     screenshot_path = paths.SCREENSHOTS_DIR / f"job_apply_failed_{timestamp}.png"
+            #     await self.page.screenshot(path=screenshot_path, type="png", full_page=True)
+            #     logger.info(f"Screenshot saved at {screenshot_path}")
+            #     return False, apply_error
         except Exception as e:
             logger.error(f"Job application failed for {url}: {e}")
             return False, "Unexpected error during job application."
@@ -728,5 +765,7 @@ if __name__ == '__main__':
 
             applicator = UpworkJobApplication(page)
             await applicator.job_apply(url=url, user=user)
+
+            await context_handler.destroy()
     
     asyncio.run(main())
