@@ -320,25 +320,44 @@ class UpworkJobApplication:
                     logger.info("Proposal type selection checkbox not available.")
             else:
                 logger.info("Selecting team and freelancer for agency proposal...")
-                team_dropdown_selector = '.fe-proposal-settings .up-fe-team-selector [data-test="dropdown-toggle"]'
+                team_dropdown_selector = 'div[data-test="dropdown-toggle"][aria-labelledby="team-label"]'
                 team_dropdown = self.page.locator(team_dropdown_selector).first
                 await team_dropdown.wait_for(state="visible", timeout=15000)
-                print("team dropdown is visible: ", await team_dropdown.is_visible())
+                logger.info(f"team dropdown is visible: {await team_dropdown.is_visible()}")
                 await team_dropdown.click()
 
-                team_option_selector = '#dropdown-menu > li'
-                team_option = self.page.locator(team_option_selector).filter(
-                    has_text="Relu Consultancy"
-                ).first
+                # WAIT FOR MENU TO OPEN
+                await self.page.locator('#dropdown-menu').wait_for(
+                    state="visible",
+                    timeout=15000
+                )
+
+                # SELECT TEAM
+                team_option = self.page.get_by_role(
+                    "option",
+                    name="Relu Consultancy"
+                )
                 await team_option.wait_for(state="visible", timeout=15000)
-                print("team option is visible: ", await team_option.is_visible())
                 await team_option.click()
                 logger.info("Selected 'Relu Consultancy' as the team for agency proposal.")
 
-                freelancer_dropdown_selector = '.fe-proposal-settings [aria-labelledby="contractor-label"]'
-                freelancer_dropdown = self.page.locator(freelancer_dropdown_selector).first
+                # WAIT FOR FREELANCER DROPDOWN TO ENABLE
+                freelancer_dropdown = self.page.locator(
+                    '[aria-labelledby="contractor-label"]'
+                )
+
                 await freelancer_dropdown.wait_for(state="visible", timeout=15000)
+
+                # Sometimes Upwork enables it after team selection
+                await self.page.wait_for_timeout(2000)
+
                 await freelancer_dropdown.click()
+
+                # WAIT MENU AGAIN
+                await self.page.locator('#dropdown-menu').wait_for(
+                    state="visible",
+                    timeout=15000
+                )
 
                 freelancer_option_selector = '#dropdown-menu > li'
                 freelancer_option = self.page.locator(freelancer_option_selector).filter(
@@ -468,13 +487,13 @@ class UpworkJobApplication:
             # fill question answers if available
             await self.handle_questions(answers)
             
-            # submit_selector = 'div.fe-apply-footer-controls > button:first-of-type'
-            # submit_button = self.page.locator(submit_selector)
-            # await submit_button.scroll_into_view_if_needed()
-            # await submit_button.click()
-            # await self.page.wait_for_timeout(random.uniform(7.7, 9.93)*1000)
+            submit_selector = 'div.fe-apply-footer-controls > button:first-of-type'
+            submit_button = self.page.locator(submit_selector)
+            await submit_button.scroll_into_view_if_needed()
+            await submit_button.click()
+            await self.page.wait_for_timeout(random.uniform(7.7, 9.93)*1000)
 
-            # return await self.verify_apply()
+            return await self.verify_apply()
         except Exception as e:
             logger.error(f"Error filling hourly rate form: {e}", exc_info=True)
             return False, "Error occurred while filling hourly rate form."
@@ -601,8 +620,8 @@ class UpworkJobApplication:
         """
         try:
             active_account_selector = 'li.nav-user-info a[href*="/agencies/"]'
-            await self.page.wait_for_selector(active_account_selector, state="attached", timeout=60000)
             active_account = self.page.locator(active_account_selector).first
+            await active_account.wait_for(state="attached", timeout=5000)
 
             href = await active_account.get_attribute("href")
             name_el = active_account.locator(".nav-user-label").first
