@@ -416,6 +416,8 @@ class JobFilter:
         data['estimated_budget'] = job_data.get('estimated_budget')
         data['hourly_rate'] = job_data.get('hourly_rate')
         data['attachments'] = attachments
+        data['keywords'] = job_data.get('keywords', [])
+        data['experience_level'] = job_data.get('experience_level', '')
 
         update = {
             "key": link,

@@ -1,7 +1,6 @@
+import asyncio
 import logging
 
-# import random
-# import time
 from patchright.async_api import async_playwright, TimeoutError
 
 # from browser import PatchrightBrowser
@@ -12,7 +11,7 @@ from upwork.apply import UpworkJobApplication
 from upwork.auth import UpworkLoginManager
 from upwork.filter import JobFilter
 from upwork.scraper import JobScraper
-from utils import get_proxy, save_job_apply_stats, save_url
+from utils import get_proxy, save_job_apply_stats, save_url, predict_job, format_prediction_score
 from utils.job_stats import update_job_in_sheet
 
 logger = logging.getLogger(__name__)
@@ -216,6 +215,64 @@ async def process_jobs_for_user(user_name: str, jobs:list[dict]) -> None:
         logger.error(f"Error processing jobs for user '{user.name}': {e}", exc_info=True)
 
 
+async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
+    """
+    Third filtering layer using the ML prediction API.
+    Only jobs with probability >= 80% are passed through for application.
+    Stores raw API response and formatted percentage in Google Sheets for all jobs.
+    """
+    if not filtered_jobs:
+        logger.info("No jobs to run through ML filter.")
+        return []
+
+    logger.info(f"Running ML filter on {len(filtered_jobs)} job(s)...")
+
+    passed_jobs: list[dict] = []
+    sheet_updates: list[dict] = []
+
+    for job in filtered_jobs:
+        link = job.get("link", "")
+
+        result = await asyncio.to_thread(predict_job, job)
+
+        if result is None:
+            logger.warning(f"ML API returned no result for job: {link} — skipping.")
+            continue
+
+        probability: float = result.get("probability", 0.0)
+        raw_response: str = str(result)
+        score: str = format_prediction_score(probability)
+
+        if probability >= 0.80:
+            logger.info(f"ML filter PASSED ({score}): {link}")
+            passed_jobs.append(job)
+            sheet_updates.append({
+                "key": link,
+                "values": {
+                    "prediction": raw_response,
+                    "prediction_score": score,
+                }
+            })
+        else:
+            logger.info(f"ML filter REJECTED ({score}, threshold 80%): {link}")
+            sheet_updates.append({
+                "key": link,
+                "values": {
+                    "prediction": raw_response,
+                    "prediction_score": score,
+                    "status": "skipped",
+                    "filter_by": "filter_3 - ml prediction",
+                    "filter_reason": f"ML prediction score {score} is below 80% threshold",
+                }
+            })
+
+    if sheet_updates:
+        await update_job_in_sheet(sheet_updates)
+
+    logger.info(f"ML filter complete: {len(passed_jobs)}/{len(filtered_jobs)} job(s) passed.")
+    return passed_jobs
+
+
 async def scrape_and_filter_jobs(user: UserConfig | None = None) -> list[dict]:
     """
     Scrape and filter jobs from Upwork using the default or given user.
@@ -283,6 +340,12 @@ async def main():
             logger.info("No filtered jobs found. Exiting.")
             return
 
+        filtered_jobs = await ml_filter_jobs(filtered_jobs)
+
+        if not filtered_jobs:
+            logger.info("No jobs passed ML filter. Exiting.")
+            return
+
         categorized_jobs = await categorize_jobs(filtered_jobs)
 
         for user_name, jobs in categorized_jobs.items():
@@ -301,8 +364,6 @@ async def main():
 
 
 if __name__ == '__main__':
-    import asyncio
-
     from config import configure_logging
 
     configure_logging()
