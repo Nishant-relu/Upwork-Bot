@@ -1,17 +1,19 @@
 [Unit]
 Description=Bot Scheduler Service
-After=network.target
+After=network.target xvfb.service
+Requires=xvfb.service
 
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/Desktop/project/upwork_bot
-ExecStart=/home/ubuntu/Desktop/project/upwork_bot/.venv/bin/python3 /home/ubuntu/Desktop/project/upwork_bot/bot_scheduler.py
-ExecStop=/home/ubuntu/Desktop/project/upwork_bot/.venv/bin/python3 /home/ubuntu/Desktop/project/upwork_bot/stop_bot.py
-EnvironmentFile=/home/ubuntu/Desktop/project/upwork_bot/.env
+WorkingDirectory=/home/ubuntu/upwork_bot
+ExecStart=/home/ubuntu/upwork_bot/.venv/bin/python3 /home/ubuntu/upwork_bot/bot_scheduler.py
+ExecStop=/home/ubuntu/upwork_bot/.venv/bin/python3 /home/ubuntu/upwork_bot/stop_bot.py
+EnvironmentFile=/home/ubuntu/upwork_bot/.env
 Restart=always
 RestartSec=10
 Environment=PYTHONUNBUFFERED=1
+Environment=DISPLAY=:1
 
 [Install]
 WantedBy=multi-user.target
