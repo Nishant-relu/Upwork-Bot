@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import random
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import requests
@@ -192,34 +193,66 @@ async def get_oauth_token(user: UserConfig) -> str | None:
 
 def fetch_notifications(token: str) -> list[dict]:
     """
-    Call Upwork notification API with Bearer token.
-    Returns list of {title, url} dicts for job/new notifications only.
+    Paginate through notifications and collect job/new ones from the last 24h.
+    Stops as soon as a notification older than the cutoff is encountered.
+    Returns list of {title, url}.
     """
-    try:
-        response = requests.get(
-            NOTI_API_URL,
-            headers={
-                "accept": "application/json, text/plain, */*",
-                "authorization": f"Bearer {token}",
-            },
-            params={"limit": NOTI_LIMIT, 'notificationType': 'job/new'},
-            timeout=30,
-        )
-        response.raise_for_status()
-        data = response.json()
-    except Exception as e:
-        logger.error(f"Notification API call failed: {e}", exc_info=True)
-        return []
-
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     jobs = []
-    for notif in data.get("notifications", []):
-        if notif.get("type") != "job/new":
-            continue
-        match = JOB_REGEX.search(notif.get("notificationText", ""))
-        if not match:
-            continue
-        url, title = match.groups()
-        jobs.append({"title": title.strip(), "url": url.strip()})
+    cursor = None
+
+    while True:
+        params = {"limit": NOTI_LIMIT, "notificationType": "job/new"}
+        if cursor:
+            params["cursor"] = cursor
+
+        try:
+            response = requests.get(
+                NOTI_API_URL,
+                headers={
+                    "accept": "application/json, text/plain, */*",
+                    "authorization": f"Bearer {token}",
+                },
+                params=params,
+                timeout=30,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            logger.error(f"Notification API call failed: {e}", exc_info=True)
+            break
+
+        notifications = data.get("notifications", [])
+        if not notifications:
+            break
+
+        stop = False
+        for notif in notifications:
+            created_ms = notif.get("created")
+            if not created_ms:
+                continue
+
+            created_dt = datetime.fromtimestamp(created_ms / 1000, tz=timezone.utc)
+            if created_dt < cutoff:
+                stop = True
+                break
+
+            if notif.get("type") != "job/new":
+                continue
+
+            match = JOB_REGEX.search(notif.get("notificationText", ""))
+            if not match:
+                continue
+
+            url, title = match.groups()
+            jobs.append({"title": title.strip(), "url": url.strip()})
+
+        if stop:
+            break
+
+        cursor = data.get("cursor")
+        if not cursor:
+            break
 
     return jobs
 
