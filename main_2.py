@@ -202,7 +202,7 @@ def fetch_notifications(token: str) -> list[dict]:
                 "accept": "application/json, text/plain, */*",
                 "authorization": f"Bearer {token}",
             },
-            params={"limit": NOTI_LIMIT},
+            params={"limit": NOTI_LIMIT, 'notificationType': 'job/new'},
             timeout=30,
         )
         response.raise_for_status()
