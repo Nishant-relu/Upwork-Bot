@@ -127,9 +127,9 @@ def extract_job_id_from_url(url: str) -> str:
         return ""
 
 
-def get_existing_sheet_links() -> set[str]:
+def get_existing_sheet_job_ids() -> set[str]:
     """
-    Fetch all job_link values already in Google Sheet.
+    Fetch all job_id values already in Google Sheet.
     Used at pipeline start to skip already-processed jobs.
     """
     try:
@@ -137,9 +137,9 @@ def get_existing_sheet_links() -> set[str]:
             bot_settings.SPREADSHEET_ID,
             f"{bot_settings.JOBS_SHEET_NAME}!A1:Z",
         )
-        return {row.get("job_link", "") for row in rows if row.get("job_link")}
+        return {row.get("job_id", "") for row in rows if row.get("job_id")}
     except Exception as e:
-        logger.error(f"Failed to fetch existing sheet links: {e}", exc_info=True)
+        logger.error(f"Failed to fetch existing sheet job IDs: {e}", exc_info=True)
         return set()
 
 
@@ -295,6 +295,23 @@ async def collect_all_notifications() -> list[dict]:
     logger.info(f"Unique job notifications after dedup: {len(unique)}")
     return unique
 
+def extract_job_id_from_link(url: str) -> str:
+    """Extract job ID token from Upwork job URL e.g. '~02abc123'."""
+    try:
+        return url.split("~")[1].split("?")[0]
+    except IndexError:
+        logger.warning(f"Could not extract job ID from: {url}")
+        return ""
+
+async def deduplicate_jobs(jobs_data:list[dict]) -> list[dict]:
+    """
+    Remove duplicate jobs based on their links.
+    """
+
+    existing_job_ids = get_existing_sheet_job_ids()
+    unique_jobs = [job for job in jobs_data if extract_job_id_from_link(job.get("url")) not in existing_job_ids]
+
+    return unique_jobs
 
 # ═══════════════════════════════════════════════════════════════
 # PHASE 2: SCRAPING (worker account)
@@ -375,20 +392,15 @@ async def scrape_job_page(page: Page, url: str, title: str) -> dict | None:
 
 
 async def scrape_new_jobs(
-    notifications: list[dict], existing_links: set[str]
+    notifications: list[dict]
 ) -> list[dict]:
     """
     Open worker browser, visit each notification URL not already in sheet,
     scrape all fields, save to Google Sheet.
     Returns list of scraped job dicts.
     """
-    new_notifications = [n for n in notifications if n["url"] not in existing_links]
 
-    if not new_notifications:
-        logger.info("All notification URLs already in sheet — nothing to scrape.")
-        return []
-
-    logger.info(f"Scraping {len(new_notifications)} new job(s) with worker account.")
+    logger.info(f"Scraping {len(notifications)} new job(s) with worker account.")
 
     worker = bot_settings.get_worker_user()
     proxy = get_proxy(worker.name)
@@ -407,7 +419,7 @@ async def scrape_new_jobs(
             login_manager = UpworkLoginManager(page)
             await login_manager.validate_or_login(worker)
 
-            for notif in new_notifications:
+            for notif in notifications:
                 url = notif["url"]
                 logger.info(f"Scraping: {url}")
                 job = await scrape_job_page(page, url, notif["title"])
@@ -445,7 +457,9 @@ async def apply_filter_1(job: dict) -> bool:
     Dedup is already handled in scraping phase (sheet check).
     """
     link = job.get("link", "")
-    cost = float(job.get("estimated_budget") or 0)
+    cost = float(job.get("estimated_budget") or 400)
+    if not cost:
+        cost = 400
 
     if cost and cost < bot_settings.MIN_BUDGET:
         logger.info(f"Filter 1 REJECTED (low budget ${cost}): {link}")
@@ -795,8 +809,12 @@ async def main():
             return
 
         # Phase 2: scrape new jobs with worker account (skip ones already in sheet)
-        existing_links = get_existing_sheet_links()
-        scraped_jobs = await scrape_new_jobs(notifications, existing_links)
+        unique_jobs = await deduplicate_jobs(notifications)
+        if not unique_jobs:
+            logger.info("No new unique job notifications to scrape after deduplication. Exiting.")
+            return
+        
+        scraped_jobs = await scrape_new_jobs(unique_jobs)
         if not scraped_jobs:
             logger.info("No new jobs to process. Exiting.")
             return
