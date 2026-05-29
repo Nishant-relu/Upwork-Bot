@@ -7,7 +7,7 @@ from config.constants import ML_PREDICT_API_URL
 
 logger = logging.getLogger(__name__)
 
-ML_APPLY_THRESHOLD = 0.80
+ML_APPLY_THRESHOLD = 0.55
 
 
 def build_ml_payload(job: dict) -> dict:

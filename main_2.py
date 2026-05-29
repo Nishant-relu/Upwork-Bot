@@ -3,8 +3,7 @@ import json
 import logging
 import re
 import random
-from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone  # used in production 24h lookback
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,7 +27,6 @@ logger = logging.getLogger(__name__)
 NOTI_API_URL = "https://www.upwork.com/api/v3/notification-feed/notifications/users"
 NOTI_LIMIT = 50
 JOB_REGEX = re.compile(r"\[\[(https?://[^\|]+)\|([^\]]+)\]\]")
-INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 google_sheet_updates: list[dict] = []
 
@@ -39,8 +37,8 @@ google_sheet_updates: list[dict] = []
 
 def parse_job_detail_html(html: str) -> dict:
     """
-    Parse job-specific fields from the job listing detail page HTML
-    using the same selectors as JobCardSelectors (same data-test attributes).
+    Parse job-specific fields from the job listing detail page HTML.
+    Selectors based on actual Upwork DOM (data-cy attributes on icon divs).
     """
     soup = BeautifulSoup(html, "lxml")
     data = {
@@ -53,46 +51,49 @@ def parse_job_detail_html(html: str) -> dict:
         "keywords": [],
     }
 
-    # Description
+    # Description — div[data-test="Description"] > p.text-body-sm
     try:
-        desc_tag = soup.find("span", {"id": "air3-truncation-1"})
-        if desc_tag:
-            data["description"] = format_text(desc_tag.get_text())
+        desc_section = soup.find("div", attrs={"data-test": "Description"})
+        if desc_section:
+            p_tag = desc_section.find("p", class_="text-body-sm")
+            if p_tag:
+                data["description"] = p_tag.get_text(separator=" ", strip=True)
     except Exception:
         pass
 
-    # Job type — detect via data-cy icons present on the detail page
+    # Job type + budget/rate — detect via data-cy icon, extract price from parent <li>
     try:
-        if soup.find("div", attrs={"data-cy": "fixed-price"}):
+        fixed_icon = soup.find("div", attrs={"data-cy": "fixed-price"})
+        hourly_icon = soup.find("div", attrs={"data-cy": "clock-timelog"})
+
+        if fixed_icon:
             data["job_type"] = "Fixed"
-        elif soup.find("div", attrs={"data-cy": "hourly-rate"}):
+            li = fixed_icon.find_parent("li")
+            if li:
+                strong = li.find("strong")
+                if strong:
+                    data["estimated_budget"] = parse_price(strong.get_text(strip=True))
+
+        elif hourly_icon:
             data["job_type"] = "Hourly"
+            li = hourly_icon.find_parent("li")
+            if li:
+                # Two <strong> tags for range e.g. $15.00 - $35.00, take lower bound
+                strongs = li.find_all("strong")
+                if strongs:
+                    data["hourly_rate"] = parse_price(strongs[0].get_text(strip=True))
     except Exception:
         pass
 
-    # Fixed price budget — data-test="is-fixed-price" (same as job card)
+    # Experience level — data-cy="expertise" > parent <li> > <strong>
     try:
-        budget_tag = soup.find(*JobCardSelectors.BUDGET)
-        if budget_tag:
-            data["estimated_budget"] = parse_price(
-                format_text(budget_tag.text.replace(",", ""))
-            )
-    except Exception:
-        pass
-
-    # Hourly rate — data-test="job-type-label" (same as job card)
-    try:
-        job_type_tag = soup.find(*JobCardSelectors.JOB_TYPE)
-        if job_type_tag and "hourly" in job_type_tag.text.lower():
-            data["hourly_rate"] = parse_price(format_text(job_type_tag.text))
-    except Exception:
-        pass
-
-    # Experience level — data-test="experience-level" (same as job card)
-    try:
-        exp_tag = soup.find(*JobCardSelectors.EXPERIENCE)
-        if exp_tag:
-            data["experience_level"] = format_text(exp_tag.text)
+        exp_icon = soup.find("div", attrs={"data-cy": "expertise"})
+        if exp_icon:
+            li = exp_icon.find_parent("li")
+            if li:
+                strong = li.find("strong")
+                if strong:
+                    data["experience_level"] = strong.get_text(strip=True)
     except Exception:
         pass
 
@@ -197,64 +198,94 @@ def fetch_notifications(token: str) -> list[dict]:
     Stops as soon as a notification older than the cutoff is encountered.
     Returns list of {title, url}.
     """
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+
+    # ── TESTING MODE: fetch only 2 jobs per account ──────────────
+    TEST_LIMIT = 2
+    try:
+        response = requests.get(
+            NOTI_API_URL,
+            headers={
+                "accept": "application/json, text/plain, */*",
+                "authorization": f"Bearer {token}",
+            },
+            params={"limit": NOTI_LIMIT, "notificationType": "job/new"},
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        logger.error(f"Notification API call failed: {e}", exc_info=True)
+        return []
+
     jobs = []
-    cursor = None
-
-    while True:
-        params = {"limit": NOTI_LIMIT, "notificationType": "job/new"}
-        if cursor:
-            params["cursor"] = cursor
-
-        try:
-            response = requests.get(
-                NOTI_API_URL,
-                headers={
-                    "accept": "application/json, text/plain, */*",
-                    "authorization": f"Bearer {token}",
-                },
-                params=params,
-                timeout=30,
-            )
-            response.raise_for_status()
-            data = response.json()
-        except Exception as e:
-            logger.error(f"Notification API call failed: {e}", exc_info=True)
+    for notif in data.get("notifications", []):
+        if len(jobs) >= TEST_LIMIT:
             break
-
-        notifications = data.get("notifications", [])
-        if not notifications:
-            break
-
-        stop = False
-        for notif in notifications:
-            created_ms = notif.get("created")
-            if not created_ms:
-                continue
-
-            created_dt = datetime.fromtimestamp(created_ms / 1000, tz=timezone.utc)
-            if created_dt < cutoff:
-                stop = True
-                break
-
-            if notif.get("type") != "job/new":
-                continue
-
-            match = JOB_REGEX.search(notif.get("notificationText", ""))
-            if not match:
-                continue
-
-            url, title = match.groups()
-            jobs.append({"title": title.strip(), "url": url.strip()})
-
-        if stop:
-            break
-
-        cursor = data.get("cursor")
-        if not cursor:
-            break
+        if notif.get("type") != "job/new":
+            continue
+        match = JOB_REGEX.search(notif.get("notificationText", ""))
+        if not match:
+            continue
+        url, title = match.groups()
+        jobs.append({"title": title.strip(), "url": url.strip()})
 
     return jobs
+    # ── END TESTING MODE ─────────────────────────────────────────
+
+    # ── PRODUCTION: 24h lookback (uncomment below, remove testing block above) ──
+    # cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    # jobs = []
+    # cursor = None
+    #
+    # while True:
+    #     params = {"limit": NOTI_LIMIT, "notificationType": "job/new"}
+    #     if cursor:
+    #         params["cursor"] = cursor
+    #
+    #     try:
+    #         response = requests.get(
+    #             NOTI_API_URL,
+    #             headers={
+    #                 "accept": "application/json, text/plain, */*",
+    #                 "authorization": f"Bearer {token}",
+    #             },
+    #             params=params,
+    #             timeout=30,
+    #         )
+    #         response.raise_for_status()
+    #         data = response.json()
+    #     except Exception as e:
+    #         logger.error(f"Notification API call failed: {e}", exc_info=True)
+    #         break
+    #
+    #     notifications = data.get("notifications", [])
+    #     if not notifications:
+    #         break
+    #
+    #     stop = False
+    #     for notif in notifications:
+    #         created_ms = notif.get("created")
+    #         if not created_ms:
+    #             continue
+    #         created_dt = datetime.fromtimestamp(created_ms / 1000, tz=timezone.utc)
+    #         if created_dt < cutoff:
+    #             stop = True
+    #             break
+    #         if notif.get("type") != "job/new":
+    #             continue
+    #         match = JOB_REGEX.search(notif.get("notificationText", ""))
+    #         if not match:
+    #             continue
+    #         url, title = match.groups()
+    #         jobs.append({"title": title.strip(), "url": url.strip()})
+    #
+    #     if stop:
+    #         break
+    #     cursor = data.get("cursor")
+    #     if not cursor:
+    #         break
+    #
+    # return jobs
 
 
 async def collect_all_notifications() -> list[dict]:
@@ -295,23 +326,13 @@ async def collect_all_notifications() -> list[dict]:
     logger.info(f"Unique job notifications after dedup: {len(unique)}")
     return unique
 
-def extract_job_id_from_link(url: str) -> str:
-    """Extract job ID token from Upwork job URL e.g. '~02abc123'."""
-    try:
-        return url.split("~")[1].split("?")[0]
-    except IndexError:
-        logger.warning(f"Could not extract job ID from: {url}")
-        return ""
-
-async def deduplicate_jobs(jobs_data:list[dict]) -> list[dict]:
-    """
-    Remove duplicate jobs based on their links.
-    """
-
+def deduplicate_jobs(notifications: list[dict]) -> list[dict]:
+    """Filter out notifications whose job ID already exists in the sheet."""
     existing_job_ids = get_existing_sheet_job_ids()
-    unique_jobs = [job for job in jobs_data if extract_job_id_from_link(job.get("url")) not in existing_job_ids]
-
-    return unique_jobs
+    return [
+        n for n in notifications
+        if extract_job_id_from_url(n.get("url", "")).lstrip("~") not in existing_job_ids
+    ]
 
 # ═══════════════════════════════════════════════════════════════
 # PHASE 2: SCRAPING (worker account)
@@ -343,6 +364,15 @@ async def scrape_job_page(page: Page, url: str, title: str) -> dict | None:
     loaded = await _fetch_page(page, url)
     if not loaded:
         return None
+
+    # Wait for Vue.js to render job attribute elements before parsing HTML
+    try:
+        await page.wait_for_selector(
+            "div[data-cy='fixed-price'], div[data-cy='clock-timelog']",
+            timeout=15000,
+        )
+    except Exception:
+        logger.warning(f"Job type selector not found within timeout for: {url}")
 
     html = await page.content()
     job_details = parse_job_detail_html(html)
@@ -399,6 +429,10 @@ async def scrape_new_jobs(
     scrape all fields, save to Google Sheet.
     Returns list of scraped job dicts.
     """
+
+    if not notifications:
+        logger.info("No new notifications to scrape.")
+        return []
 
     logger.info(f"Scraping {len(notifications)} new job(s) with worker account.")
 
@@ -457,9 +491,7 @@ async def apply_filter_1(job: dict) -> bool:
     Dedup is already handled in scraping phase (sheet check).
     """
     link = job.get("link", "")
-    cost = float(job.get("estimated_budget") or 400)
-    if not cost:
-        cost = 400
+    cost = float(job.get("estimated_budget") or 0)
 
     if cost and cost < bot_settings.MIN_BUDGET:
         logger.info(f"Filter 1 REJECTED (low budget ${cost}): {link}")
@@ -626,7 +658,7 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
         probability: float = result.get("probability", 0.0)
         score: str = format_prediction_score(probability)
 
-        if probability >= 0.80:
+        if probability >= 0.55:
             logger.info(f"ML PASSED ({score}): {link}")
             passed_jobs.append(job)
             sheet_updates.append({
@@ -697,16 +729,6 @@ async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
 
     return categorized
 
-
-async def extract_job_id(job_link: str) -> str:
-    """Extract job ID token from Upwork job URL."""
-    try:
-        return "~" + job_link.split("~")[1].split("?")[0]
-    except IndexError:
-        logger.warning(f"Could not extract job ID from: {job_link}")
-        return ""
-
-
 async def attempt_job_application(
     user: UserConfig,
     job: dict[str, str | list],
@@ -720,7 +742,7 @@ async def attempt_job_application(
 
     apply_link = job.get("apply_link", None)
     if apply_link is None:
-        job_id = await extract_job_id(link)
+        job_id = extract_job_id_from_url(link)
         if not job_id:
             return False
         apply_link = f"https://www.upwork.com/nx/proposals/job/{job_id}apply/"
