@@ -143,7 +143,10 @@ def parse_sheet_to_df(values: list[list[Any]]) -> pd.DataFrame:
     headers = [normalize_header(h) for h in values[0]]
     rows = values[1:]
 
-    return pd.DataFrame(rows, columns=headers).fillna("")
+    # Pad short rows so every row matches the header length
+    padded = [row + [""] * (len(headers) - len(row)) for row in rows]
+
+    return pd.DataFrame(padded, columns=headers).fillna("")
 
 
 def get_sheet_data(

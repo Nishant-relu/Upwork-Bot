@@ -1,4 +1,5 @@
 import logging
+import os
 from dataclasses import dataclass, field
 from typing import Any, Tuple
 
@@ -43,10 +44,10 @@ class Settings:
     PROPOSAL_TYPE: ProposalType = ProposalType.FREELANCER
     USER_CONFIG: dict[str, UserConfig] = field(default_factory=dict)
 
-    PROXY_HOST: str = get_env("PROXY_HOST")
-    PROXY_PORT: str = get_env("PROXY_PORT")
-    PROXY_USER: str = get_env("PROXY_USER")
-    PROXY_PASSWORD: str = get_env("PROXY_PASSWORD")
+    PROXY_HOST: str = os.getenv("PROXY_HOST", "")
+    PROXY_PORT: str = os.getenv("PROXY_PORT", "")
+    PROXY_USER: str = os.getenv("PROXY_USER", "")
+    PROXY_PASSWORD: str = os.getenv("PROXY_PASSWORD", "")
 
     def get_worker_user(self) -> UserConfig:
         workers = [u for u in self.USER_CONFIG.values() if u.account_type == "worker"]
