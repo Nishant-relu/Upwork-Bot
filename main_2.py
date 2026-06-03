@@ -712,14 +712,23 @@ async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
                 rate = float(str(client_rate_raw).replace(",", "").strip())
 
             if rate is None:
+                if "naman" in categorized:
+                    logger.info(f"No rate found — assigning to default account 'naman': {job.get('link', '')}")
+                    categorized["naman"].append(job)
                 continue
 
+            assigned = False
             for username, user in bot_settings.USER_CONFIG.items():
                 if user.account_type.lower() != "applicant":
                     continue
                 if user.min_client_hourly_rate <= rate < user.max_client_hourly_rate:
                     categorized[username].append(job)
+                    assigned = True
                     break
+
+            if not assigned and "naman" in categorized:
+                logger.info(f"Rate ${rate} fits no band — assigning to default account 'naman': {job.get('link', '')}")
+                categorized["naman"].append(job)
 
         except (ValueError, TypeError):
             logger.warning(
