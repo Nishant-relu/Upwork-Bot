@@ -625,7 +625,7 @@ async def filter_jobs(jobs: list[dict]) -> list[dict]:
 
         google_sheet_updates.append({
             "key": link,
-            "values": {"filter_by": "passed all filters", "filter_reason": "N/A", "status": "passed"},
+            "values": {"filter_by": "passed all filters", "filter_reason": "N/A"},
         })
         passed.append(job)
 
