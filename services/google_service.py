@@ -43,12 +43,13 @@ COLUMN_MAP: dict[str, str] = {
 }
 
 
-def normalize_header(header: str) -> str:
+def normalize_header(header) -> str:
     """
     Normalize Google Sheet headers:
     - Remove text inside brackets
     - Snake_case
     """
+    header = str(header).strip() if header is not None else ""
     if not header:
         return ""
     return (
