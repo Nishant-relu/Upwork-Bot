@@ -745,7 +745,7 @@ async def attempt_job_application(
         job_id = extract_job_id_from_url(link)
         if not job_id:
             return False
-        apply_link = f"https://www.upwork.com/nx/proposals/job/{job_id}apply/"
+        apply_link = f"https://www.upwork.com/nx/proposals/job/{job_id}/apply/"
 
     attachments: list = job.get("attachments", [])
     attachment_link = attachments[0] if attachments else None
