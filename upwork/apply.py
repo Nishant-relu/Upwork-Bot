@@ -752,10 +752,10 @@ class UpworkJobApplication:
                 logger.info("Failed to generate proposal. Exiting apply process.")
                 return False, "Failed to generate proposal."
 
-            relevant_job = proposal.get("relevant_job", False)
-            if not relevant_job:
-                logger.info("Job is not relevant. Exititng apply process.")
-                return False, "Job marked as not relevant by AI."
+            # relevant_job = proposal.get("relevant_job", False)
+            # if not relevant_job:
+            #     logger.info("Job is not relevant. Exititng apply process.")
+            #     return False, "Job marked as not relevant by AI."
             
             answers = proposal.get("question_answers", {})
             cover_letter = proposal.get("response", "")
