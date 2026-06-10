@@ -26,8 +26,8 @@ class Settings:
     MAX_RETRY: int = 5
     RETRY_INTERVAL_MINUTE: Tuple[int, int] = (2, 5)
 
-    MIN_BUDGET: int = 300
-    MIN_TOTAL_SPENT: int = 5000
+    MIN_BUDGET: int = 0
+    MIN_TOTAL_SPENT: int = 0
     MAX_PROPOSAL: int = 50
 
     SKIP_KEYWORDS: Tuple[str, ...] = ("Lead Generation",)

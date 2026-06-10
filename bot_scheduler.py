@@ -12,7 +12,7 @@ from config import bot_settings, configure_logging
 # ==== CONFIGURATION ====
 CURRENT_DIR = Path(__file__).parent.resolve()
 VENV_PATH = CURRENT_DIR / ".venv/bin/activate"
-BOT_SCRIPT = CURRENT_DIR / "main.py"
+BOT_SCRIPT = CURRENT_DIR / "main_2.py"
 
 # Log setup
 configure_logging()

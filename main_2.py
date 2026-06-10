@@ -499,7 +499,7 @@ async def apply_filter_1(job: dict) -> bool:
     link = job.get("link", "")
     cost = float(job.get("estimated_budget") or 0)
 
-    if cost and cost < bot_settings.MIN_BUDGET:
+    if bot_settings.MIN_BUDGET and cost and cost < bot_settings.MIN_BUDGET:
         logger.info(f"Filter 1 REJECTED (low budget ${cost}): {link}")
         google_sheet_updates.append({
             "key": link,

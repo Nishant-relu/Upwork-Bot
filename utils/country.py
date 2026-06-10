@@ -22,5 +22,14 @@ def normalize_country(name:str) -> str|None:
         if country:
             return country.name
     except LookupError:
-        logger.exception(f"Standard country name not find for {name}.", exc_info=True)
-        return None
+        pass
+
+    try:
+        results = pycountry.countries.search_fuzzy(name.strip())
+        if results:
+            return results[0].name
+    except LookupError:
+        pass
+
+    logger.warning(f"Standard country name not found for: {name}")
+    return None
