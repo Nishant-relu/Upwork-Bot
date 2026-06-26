@@ -12,6 +12,7 @@ from patchright.async_api import async_playwright, Page
 from browser.context import ContextHandler
 from browser.utils import dismiss_cookies_popup, handle_captcha
 from config import bot_settings, paths
+from config.constants import APPLY_REDIRECT, NO_APPLY_ACCOUNTS
 from config.schema import UserConfig
 from upwork.apply import UpworkJobApplication
 from upwork.auth import UpworkLoginManager
@@ -715,10 +716,6 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
 # ═══════════════════════════════════════════════════════════════
 # PHASE 5: CATEGORIZE + APPLY
 # ═══════════════════════════════════════════════════════════════
-
-NO_APPLY_ACCOUNTS: set[str] = {"kishan"}   # scrape notifications but do not apply
-APPLY_REDIRECT: dict[str, str] = {"kishan": "muktesh"}  # redirect their jobs to this account
-
 
 async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
     """

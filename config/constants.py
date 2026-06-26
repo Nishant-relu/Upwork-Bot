@@ -10,3 +10,9 @@ IP_CHECK_URL:str = "https://ip.smartproxy.com/ip"
 # PROPOSAL_API_URL = "http://5.78.43.182:9000/generate-response-json"
 PROPOSAL_API_URL = "https://proposal.reluconsultancy.in/api/generate-response-json"
 ML_PREDICT_API_URL = "https://predict.reluconsultancy.in/predict"
+
+# Accounts that scrape notifications but never apply.
+# Their rate range is excluded from overlap validation.
+NO_APPLY_ACCOUNTS: set[str] = {"kishan"}
+# Redirect a no-apply account's matched jobs to another account.
+APPLY_REDIRECT: dict[str, str] = {"kishan": "muktesh"}

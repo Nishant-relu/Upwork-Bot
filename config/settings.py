@@ -118,7 +118,12 @@ def load_user_config_from_sheet(
 
 
 def validate_user_configs(users: dict[str, UserConfig]) -> None:
-    applicants = [u for u in users.values() if u.account_type == "applicant"]
+    from config.constants import NO_APPLY_ACCOUNTS
+
+    applicants = [
+        u for u in users.values()
+        if u.account_type == "applicant" and u.name not in NO_APPLY_ACCOUNTS
+    ]
 
     for user in applicants:
         if user.min_client_hourly_rate > user.max_client_hourly_rate:
