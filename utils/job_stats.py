@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from datetime import datetime
@@ -210,17 +211,28 @@ async def save_jobs_to_sheet(jobs_data:list[dict]):
 
 async def update_job_in_sheet(updates:list[dict]):
     """Batch update jobs in Google Sheets based on a list of updates."""
-    try:
-        from config import bot_settings
-        spreadsheet_id = bot_settings.SPREADSHEET_ID
-        sheet_name = bot_settings.JOBS_SHEET_NAME
+    from config import bot_settings
+    spreadsheet_id = bot_settings.SPREADSHEET_ID
+    sheet_name = bot_settings.JOBS_SHEET_NAME
 
-        if not updates:
-            logger.info("No updates to apply to sheet.")
+    if not updates:
+        logger.info("No updates to apply to sheet.")
+        return
+
+    max_attempts = 3
+    for attempt in range(1, max_attempts + 1):
+        try:
+            data = batch_update_by_key(spreadsheet_id, sheet_name, updates)
+            logger.info(f"Updated jobs in Google Sheet. Update response data: {data}")
             return
+        except Exception as e:
+            logger.warning(
+                f"Sheet update attempt {attempt}/{max_attempts} failed: {e}"
+            )
+            if attempt < max_attempts:
+                await asyncio.sleep(2 * attempt)
 
-        data = batch_update_by_key(spreadsheet_id, sheet_name, updates)
-        logger.info(f"Updated jobs in Google Sheet. Update response data: {data}")
-
-    except Exception as e:
-        logger.error(f"Error while updating jobs in Google Sheets: {e}", exc_info=True)
+    logger.error(
+        f"Failed to update jobs in Google Sheets after {max_attempts} attempts. "
+        f"{len(updates)} update(s) lost this run."
+    )
