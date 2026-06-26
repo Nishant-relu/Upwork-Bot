@@ -581,6 +581,33 @@ async def apply_filter_2(job: dict) -> bool:
             await save_url(link, f"Banned location: {location}")
             return False
 
+    # Reject hourly jobs where client avg hourly rate < $7
+    job_type = job.get("job_type", "").lower()
+    client_hourly_raw = client_data.get("hourly rate", "")
+    if job_type == "hourly" and client_hourly_raw:
+        try:
+            client_rate = float(str(client_hourly_raw).replace("$", "").replace(",", "").strip())
+            if client_rate < 7:
+                logger.info(f"Filter 2 REJECTED (client hourly rate ${client_rate} < $7): {link}")
+                _reject("filter_2 - low client hourly rate", f"Client avg hourly rate ${client_rate} < $7")
+                await save_url(link, f"Client hourly rate ${client_rate} < $7")
+                return False
+        except (ValueError, TypeError):
+            pass
+
+    # Reject if this job already has a hire (activity_data shows Hired: 1+)
+    for key, val in (activity_data or {}).items():
+        if "hired" in key.lower():
+            try:
+                if int(str(val).strip()) > 0:
+                    logger.info(f"Filter 2 REJECTED (job already hired {val}): {link}")
+                    _reject("filter_2 - already hired", f"Job already has {val} hire(s)")
+                    await save_url(link, f"Job already hired: {val}")
+                    return False
+            except (ValueError, TypeError):
+                pass
+            break
+
     if activity_data and "Proposals:" in activity_data:
         proposals_max = activity_data["Proposals:"].get("max", 0)
         if proposals_max > bot_settings.MAX_PROPOSAL:
@@ -689,15 +716,20 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
 # PHASE 5: CATEGORIZE + APPLY
 # ═══════════════════════════════════════════════════════════════
 
+NO_APPLY_ACCOUNTS: set[str] = {"kishan"}   # scrape notifications but do not apply
+APPLY_REDIRECT: dict[str, str] = {"kishan": "muktesh"}  # redirect their jobs to this account
+
+
 async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
     """
     Assign jobs to applicant users based on hourly rate bands.
     Priority: job hourly_rate > client_data["hourly rate"].
+    Accounts in NO_APPLY_ACCOUNTS are excluded from applying; their jobs go to APPLY_REDIRECT.
     """
     categorized: dict[str, list[dict]] = {
         username: []
         for username, user in bot_settings.USER_CONFIG.items()
-        if user.account_type.lower() == "applicant"
+        if user.account_type.lower() == "applicant" and username not in NO_APPLY_ACCOUNTS
     }
 
     for job in job_data:
@@ -722,8 +754,10 @@ async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
                 if user.account_type.lower() != "applicant":
                     continue
                 if user.min_client_hourly_rate <= rate < user.max_client_hourly_rate:
-                    categorized[username].append(job)
-                    assigned = True
+                    target = APPLY_REDIRECT.get(username, username)
+                    if target in categorized:
+                        categorized[target].append(job)
+                        assigned = True
                     break
 
             if not assigned and "naman" in categorized:
