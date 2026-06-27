@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
@@ -12,6 +13,28 @@ from googleapiclient.errors import HttpError
 
 
 logger = logging.getLogger(__name__)
+
+
+def execute_with_retry(request, description: str = "Google Sheets request", max_attempts: int = 5):
+    """
+    Execute a Google API request with logged retries on transient errors
+    (broken pipe, SSL EOF, connection reset, 5xx). Raises the last error if
+    all attempts fail.
+    """
+    last_exc = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            result = request.execute()
+            if attempt > 1:
+                logger.info(f"{description} succeeded on attempt {attempt}/{max_attempts}.")
+            return result
+        except Exception as e:
+            last_exc = e
+            logger.warning(f"{description} attempt {attempt}/{max_attempts} failed: {e}")
+            if attempt < max_attempts:
+                time.sleep(2 * attempt)
+    logger.error(f"{description} failed after {max_attempts} attempts.")
+    raise last_exc
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SERVICE_ACCOUNT_FILE = BASE_DIR / "upwork-bot-service-account.json"
@@ -118,15 +141,15 @@ def fetch_sheet_values(
     service = get_google_sheets_service()
 
     try:
-        response = (
+        response = execute_with_retry(
             service.spreadsheets()
             .values()
             .get(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
                 valueRenderOption="UNFORMATTED_VALUE",
-            )
-            .execute()
+            ),
+            f"fetch sheet values [{range_name}]",
         )
         return response.get("values", [])
     except HttpError:
@@ -177,11 +200,11 @@ def build_row_index_by_column(
     range_name = f"{sheet_name}!{col}:{col}"
 
     try:
-        response = (
+        response = execute_with_retry(
             service.spreadsheets()
             .values()
-            .get(spreadsheetId=spreadsheet_id, range=range_name)
-            .execute()
+            .get(spreadsheetId=spreadsheet_id, range=range_name),
+            f"build row index [{range_name}]",
         )
 
         values = response.get("values", [])
@@ -207,7 +230,7 @@ def _batch_update(
         return {}
 
     try:
-        response = (
+        response = execute_with_retry(
             service.spreadsheets()
             .values()
             .batchUpdate(
@@ -216,8 +239,8 @@ def _batch_update(
                     "valueInputOption": "USER_ENTERED",
                     "data": data,
                 },
-            )
-            .execute()
+            ),
+            f"batch update ({len(data)} cells)",
         )
         logger.info("Batch update successful | cells=%s", len(data))
         return response
@@ -312,7 +335,7 @@ def batch_append_jobs(
     service = service or get_google_sheets_service()
 
     try:
-        response = (
+        response = execute_with_retry(
             service.spreadsheets()
             .values()
             .append(
@@ -321,8 +344,8 @@ def batch_append_jobs(
                 valueInputOption="USER_ENTERED",
                 insertDataOption="INSERT_ROWS",
                 body={"values": rows},
-            )
-            .execute()
+            ),
+            f"append {len(rows)} job(s)",
         )
         logger.info(f"Appended {len(rows)} job(s) to Google Sheet: {sheet_name}")
         return response
@@ -435,12 +458,15 @@ def bulk_upsert_sheet_data(
             r_norm["updated_at"] = now_str
             rows.append([r_norm.get(h, "") for h in headers])
 
-        service.spreadsheets().values().update(
-            spreadsheetId=spreadsheet_id,
-            range=f"{sheet_name}!A1",
-            valueInputOption="RAW",
-            body={"values": [headers] + rows},
-        ).execute()
+        execute_with_retry(
+            service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=f"{sheet_name}!A1",
+                valueInputOption="RAW",
+                body={"values": [headers] + rows},
+            ),
+            "bulk upsert: create headers + rows",
+        )
         return
 
     # Prepare DataFrame
@@ -493,24 +519,30 @@ def bulk_upsert_sheet_data(
     try:
         # Batch updates
         if updates:
-            service.spreadsheets().values().batchUpdate(
-                spreadsheetId=spreadsheet_id,
-                body={
-                    "valueInputOption": "RAW",
-                    "data": updates,
-                },
-            ).execute()
+            execute_with_retry(
+                service.spreadsheets().values().batchUpdate(
+                    spreadsheetId=spreadsheet_id,
+                    body={
+                        "valueInputOption": "RAW",
+                        "data": updates,
+                    },
+                ),
+                f"bulk upsert: update {len(updates)} rows",
+            )
             logger.info(f"Updated {len(updates)} rows")
 
         # Batch appends
         if appends:
-            service.spreadsheets().values().append(
-                spreadsheetId=spreadsheet_id,
-                range=f"{sheet_name}!A1",
-                valueInputOption="RAW",
-                insertDataOption="INSERT_ROWS",
-                body={"values": appends},
-            ).execute()
+            execute_with_retry(
+                service.spreadsheets().values().append(
+                    spreadsheetId=spreadsheet_id,
+                    range=f"{sheet_name}!A1",
+                    valueInputOption="RAW",
+                    insertDataOption="INSERT_ROWS",
+                    body={"values": appends},
+                ),
+                f"bulk upsert: append {len(appends)} rows",
+            )
             logger.info(f"Appended {len(appends)} rows")
 
     except HttpError:
