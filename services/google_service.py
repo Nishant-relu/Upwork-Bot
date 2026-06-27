@@ -1,9 +1,11 @@
 import logging
+import socket
+import ssl
 import time
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -14,20 +16,46 @@ from googleapiclient.errors import HttpError
 
 logger = logging.getLogger(__name__)
 
+# Connection-level errors where the cached service likely holds a dead socket.
+RETRYABLE_CONN_ERRORS = (
+    BrokenPipeError,
+    ConnectionResetError,
+    ConnectionAbortedError,
+    ssl.SSLError,
+    socket.error,
+    TimeoutError,
+)
 
-def execute_with_retry(request, description: str = "Google Sheets request", max_attempts: int = 5):
+
+def execute_with_retry(
+    request_factory: "Callable[[], Any]",
+    description: str = "Google Sheets request",
+    max_attempts: int = 5,
+):
     """
-    Execute a Google API request with logged retries on transient errors
-    (broken pipe, SSL EOF, connection reset, 5xx). Raises the last error if
-    all attempts fail.
+    Execute a Google API request with logged retries on transient errors.
+
+    `request_factory` MUST be a callable that builds and returns a fresh request
+    object (e.g. `lambda: service.spreadsheets().values().get(...)`). On a
+    connection error the cached service is dropped and a new request is built
+    from a fresh service+connection on the next attempt — retrying the same
+    request object would just reuse the dead socket.
     """
     last_exc = None
     for attempt in range(1, max_attempts + 1):
         try:
-            result = request.execute()
+            result = request_factory().execute()
             if attempt > 1:
                 logger.info(f"{description} succeeded on attempt {attempt}/{max_attempts}.")
             return result
+        except RETRYABLE_CONN_ERRORS as e:
+            last_exc = e
+            logger.warning(
+                f"{description} attempt {attempt}/{max_attempts} failed (connection error): {e}"
+            )
+            get_google_sheets_service.cache_clear()  # next factory() builds a live connection
+            if attempt < max_attempts:
+                time.sleep(2 * attempt)
         except Exception as e:
             last_exc = e
             logger.warning(f"{description} attempt {attempt}/{max_attempts} failed: {e}")
@@ -138,11 +166,10 @@ def fetch_sheet_values(
     """
     Fetch raw values from a sheet range.
     """
-    service = get_google_sheets_service()
-
     try:
         response = execute_with_retry(
-            service.spreadsheets()
+            lambda: get_google_sheets_service()
+            .spreadsheets()
             .values()
             .get(
                 spreadsheetId=spreadsheet_id,
@@ -201,7 +228,8 @@ def build_row_index_by_column(
 
     try:
         response = execute_with_retry(
-            service.spreadsheets()
+            lambda: get_google_sheets_service()
+            .spreadsheets()
             .values()
             .get(spreadsheetId=spreadsheet_id, range=range_name),
             f"build row index [{range_name}]",
@@ -231,7 +259,8 @@ def _batch_update(
 
     try:
         response = execute_with_retry(
-            service.spreadsheets()
+            lambda: get_google_sheets_service()
+            .spreadsheets()
             .values()
             .batchUpdate(
                 spreadsheetId=spreadsheet_id,
@@ -336,7 +365,8 @@ def batch_append_jobs(
 
     try:
         response = execute_with_retry(
-            service.spreadsheets()
+            lambda: get_google_sheets_service()
+            .spreadsheets()
             .values()
             .append(
                 spreadsheetId=spreadsheet_id,
@@ -424,7 +454,6 @@ def bulk_upsert_sheet_data(
         logger.info("No records provided for upsert.")
         return
     
-    service = get_google_sheets_service()
     range_name = f"{sheet_name}!A1:Z"
     values = fetch_sheet_values(spreadsheet_id, range_name)
 
@@ -459,7 +488,7 @@ def bulk_upsert_sheet_data(
             rows.append([r_norm.get(h, "") for h in headers])
 
         execute_with_retry(
-            service.spreadsheets().values().update(
+            lambda: get_google_sheets_service().spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
                 range=f"{sheet_name}!A1",
                 valueInputOption="RAW",
@@ -520,7 +549,7 @@ def bulk_upsert_sheet_data(
         # Batch updates
         if updates:
             execute_with_retry(
-                service.spreadsheets().values().batchUpdate(
+                lambda: get_google_sheets_service().spreadsheets().values().batchUpdate(
                     spreadsheetId=spreadsheet_id,
                     body={
                         "valueInputOption": "RAW",
@@ -534,7 +563,7 @@ def bulk_upsert_sheet_data(
         # Batch appends
         if appends:
             execute_with_retry(
-                service.spreadsheets().values().append(
+                lambda: get_google_sheets_service().spreadsheets().values().append(
                     spreadsheetId=spreadsheet_id,
                     range=f"{sheet_name}!A1",
                     valueInputOption="RAW",
