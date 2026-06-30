@@ -666,7 +666,7 @@ async def filter_jobs(jobs: list[dict]) -> list[dict]:
 # ═══════════════════════════════════════════════════════════════
 
 async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
-    """ML prediction filter — only jobs with probability >= 75% pass."""
+    """ML prediction filter — only jobs with probability >= 70% pass."""
     if not filtered_jobs:
         logger.info("No jobs to run through ML filter.")
         return []
@@ -686,7 +686,7 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
         probability: float = result.get("probability", 0.0)
         score: str = format_prediction_score(probability)
 
-        if probability >= 0.75:
+        if probability >= 0.70:
             logger.info(f"ML PASSED ({score}): {link}")
             passed_jobs.append(job)
             sheet_updates.append({
@@ -702,7 +702,7 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
                     "prediction_score": score,
                     "status": "skipped",
                     "filter_by": "filter_3 - ml prediction",
-                    "filter_reason": f"ML score {score} below 75% threshold",
+                    "filter_reason": f"ML score {score} below 70% threshold",
                 },
             })
 
