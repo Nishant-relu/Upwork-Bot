@@ -14,7 +14,8 @@ if user is None:
 
 async def main():
     async with async_playwright() as pw:
-        browser = await pw.chromium.launch(channel="chrome", headless=False)  # no proxy: local IP is blacklisted on this Bright Data zone
+        # browser = await pw.chromium.launch(channel="chrome", headless=False)  # no proxy: local IP is blacklisted on this Bright Data zone
+        browser = await pw.chromium.launch(channel="chrome", headless=False, proxy=get_proxy(name))
         handler = ContextHandler(browser, paths.COOKIES_DIR / f"{name}_cookies.json")
         page = await (await handler.create()).new_page()
         await page.goto(constants.UPWORK_LOGIN_URL)
