@@ -47,8 +47,9 @@ class UpworkLoginManager:
             await self.wait_random(5.79, 9.91)  # Wait for the page to load
             user_menu = await self.page.locator(self.selectors.USER_MENU_LIST_ITEM).is_visible()
             user_profile = await self.page.locator(self.selectors.USER_PROFILE).is_visible()
+            sidebar_profile = await self.page.locator(self.selectors.SIDEBAR_PROFILE).is_visible()
 
-            if user_menu or user_profile:
+            if user_menu or user_profile or sidebar_profile:
                 logger.info("Login successful")
                 return True
             await self.page.screenshot(type="png", path=paths.SCREENSHOTS_DIR/f"login_failed_{datetime.now().strftime("%d%m%Y_%H%M%S")}.png", full_page=True)
