@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 from patchright.async_api import Page, TimeoutError
 
-from browser import dismiss_cookies_popup, handle_captcha
+from browser import dismiss_cookies_popup, dismiss_sidebar_overlay, handle_captcha
 from config import bot_settings, paths
 from config.schema import UserConfig
 from utils import download_file, format_price, generate_proposal
@@ -192,6 +192,7 @@ class UpworkJobApplication:
 
             if await toggle_btn.is_visible(timeout=15000):
                 await toggle_btn.scroll_into_view_if_needed()
+                await dismiss_sidebar_overlay(self.page)
                 await toggle_btn.click(timeout=15000)
                 await self.page.wait_for_timeout(random.uniform(1.7, 2.93)*1000)
 
@@ -313,6 +314,7 @@ class UpworkJobApplication:
                 if await checkbox.is_visible(timeout=15000):
                     logger.info("Found Check box with proposals.")
                     await checkbox.wait_for(timeout=10000)
+                    await dismiss_sidebar_overlay(self.page)
                     await checkbox.click(button="left", timeout=10000)
                     await self.page.wait_for_timeout(random.uniform(1.7, 2.93)*1000)
                     logger.info(f"Proposal type '{proposal_type}' selected.")
@@ -733,7 +735,9 @@ class UpworkJobApplication:
             if error_visible:
                 logger.info("Error message on the page. Exiting job apply process.")
                 return False, error_msg
-            
+
+            await dismiss_sidebar_overlay(self.page)
+
             await self.set_proposal_type(use_freelancer=use_freelancer)
             
             disqualified_visible, warning_msg = await self.is_disqualified_warning_active()
