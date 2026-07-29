@@ -14,13 +14,13 @@ from browser.utils import dismiss_cookies_popup, handle_captcha
 from config import bot_settings, paths
 from config.constants import APPLY_REDIRECT, NO_APPLY_ACCOUNTS
 from config.schema import UserConfig
-from upwork.apply import UpworkJobApplication
 from upwork.auth import UpworkLoginManager
 from upwork.parser import JobHtmlParser
 from upwork.selectors import UpworkJobDetailSelectors
 from upwork.parsers.utils import format_price as parse_price
-from utils import get_proxy, save_job_apply_stats, save_url, predict_job, format_prediction_score
+from utils import get_proxy, save_url, predict_job, format_prediction_score
 from utils.job_stats import update_job_in_sheet
+from utils.job_notification_service import send_jobs_for_review
 from services.google_service import batch_append_jobs, get_sheet_data
 
 logger = logging.getLogger(__name__)
@@ -688,6 +688,7 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
 
         if probability >= 0.70:
             logger.info(f"ML PASSED ({score}): {link}")
+            job["prediction_score"] = score
             passed_jobs.append(job)
             sheet_updates.append({
                 "key": link,
@@ -714,143 +715,58 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
 
 
 # ═══════════════════════════════════════════════════════════════
-# PHASE 5: CATEGORIZE + APPLY
+# PHASE 5: ASSIGN ACCOUNT + NOTIFY FOR REVIEW
 # ═══════════════════════════════════════════════════════════════
 
-async def categorize_jobs(job_data: list[dict]) -> dict[str, list[dict]]:
+def assign_accounts(job_data: list[dict]) -> None:
     """
-    Assign jobs to applicant users based on hourly rate bands.
-    Priority: job hourly_rate > client_data["hourly rate"].
-    Accounts in NO_APPLY_ACCOUNTS are excluded from applying; their jobs go to APPLY_REDIRECT.
+    Stamp job["assigned_to"] with the applicant account that should apply,
+    based on hourly rate bands. Priority: job hourly_rate > client_data["hourly rate"].
+    Accounts in NO_APPLY_ACCOUNTS are excluded; their jobs go to APPLY_REDIRECT.
     """
-    categorized: dict[str, list[dict]] = {
-        username: []
+    eligible = {
+        username
         for username, user in bot_settings.USER_CONFIG.items()
         if user.account_type.lower() == "applicant" and username not in NO_APPLY_ACCOUNTS
     }
+    default = "naman" if "naman" in eligible else (next(iter(eligible), ""))
 
     for job in job_data:
+        link = job.get("link", "")
         try:
             job_rate = job.get("hourly_rate", 0)
             client_rate_raw = job.get("client_data", {}).get("hourly rate")
-            rate = None
 
             if job_rate and float(job_rate) > 0:
                 rate = float(job_rate)
             elif client_rate_raw is not None:
                 rate = float(str(client_rate_raw).replace(",", "").strip())
-
-            if rate is None:
-                if "naman" in categorized:
-                    logger.info(f"No rate found — assigning to default account 'naman': {job.get('link', '')}")
-                    categorized["naman"].append(job)
+            else:
+                logger.info(f"No rate found — assigning to default account '{default}': {link}")
+                job["assigned_to"] = default
                 continue
 
-            assigned = False
+            job["assigned_to"] = ""
             for username, user in bot_settings.USER_CONFIG.items():
                 if user.account_type.lower() != "applicant":
                     continue
                 if user.min_client_hourly_rate <= rate < user.max_client_hourly_rate:
                     target = APPLY_REDIRECT.get(username, username)
-                    if target in categorized:
-                        categorized[target].append(job)
-                        assigned = True
+                    if target in eligible:
+                        job["assigned_to"] = target
                     break
 
-            if not assigned and "naman" in categorized:
-                logger.info(f"Rate ${rate} fits no band — assigning to default account 'naman': {job.get('link', '')}")
-                categorized["naman"].append(job)
+            # no band matched, or the matched account is not eligible to apply
+            if not job["assigned_to"]:
+                logger.info(f"Rate ${rate} fits no band — assigning to default account '{default}': {link}")
+                job["assigned_to"] = default
 
         except (ValueError, TypeError):
             logger.warning(
                 f"Invalid rate | job_rate={job.get('hourly_rate')} "
                 f"| client_rate={job.get('client_data', {}).get('hourly rate')}"
             )
-
-    return categorized
-
-async def attempt_job_application(
-    user: UserConfig,
-    job: dict[str, str | list],
-    job_applicator: UpworkJobApplication,
-    invitation_job_apply: bool = False,
-) -> bool:
-    link: str = job.get("link", "")
-    if not link:
-        logger.warning(f"[{user.name}] Skipping job with missing link.")
-        return False
-
-    apply_link = job.get("apply_link", None)
-    if apply_link is None:
-        job_id = extract_job_id_from_url(link)
-        if not job_id:
-            return False
-        apply_link = f"https://www.upwork.com/nx/proposals/job/{job_id}/apply/"
-
-    attachments: list = job.get("attachments", [])
-    attachment_link = attachments[0] if attachments else None
-    fixed_price = job.get("fixed_price", None)
-
-    logger.info(f"[{user.name}] Applying to: {apply_link}")
-
-    try:
-        success, _ = await job_applicator.job_apply(
-            apply_link, user, attachment_link, fixed_price
-        )
-        if success:
-            logger.info(f"[{user.name}] Successfully applied to {apply_link}\n")
-            await save_url(link, f"Successfully applied using {user.name}")
-            await save_job_apply_stats(user.name, link, invitation_job_apply)
-            google_sheet_updates.append({
-                "key": link,
-                "values": {"status": "applied", "applied_by": user.name},
-            })
-            return True
-
-        google_sheet_updates.append({
-            "key": link,
-            "values": {"status": "application_failed", "applied_by": user.name},
-        })
-        await save_url(link, f"Failed to apply using {user.name}", debug=True)
-        logger.warning(f"[{user.name}] Failed to apply to {apply_link}\n")
-        return False
-
-    except Exception as e:
-        logger.error(f"[{user.name}] Error applying to {apply_link}: {e}", exc_info=True)
-        return False
-
-
-async def process_jobs_for_user(user_name: str, jobs: list[dict]) -> None:
-    """Launch browser for one applicant user and apply to their assigned jobs."""
-    if not jobs:
-        logger.info(f"No jobs to apply for: {user_name}")
-        return
-
-    user = bot_settings.USER_CONFIG.get(user_name)
-    proxy = None
-    cookies_path = paths.COOKIES_DIR / f"{user.name}_cookies.json"
-
-    try:
-        async with async_playwright() as playwright:
-            logger.info(f"Processing {len(jobs)} job(s) for: {user.name}")
-            browser = await playwright.chromium.launch(
-                channel="chrome", headless=False, proxy=proxy
-            )
-            context_handler = ContextHandler(browser, cookies_path)
-            context = await context_handler.create()
-            page = await context.new_page()
-
-            login_manager = UpworkLoginManager(page)
-            await login_manager.validate_or_login(user)
-
-            job_applicator = UpworkJobApplication(page)
-            for job in jobs:
-                await attempt_job_application(user, job, job_applicator)
-
-            await context_handler.destroy()
-
-    except Exception as e:
-        logger.error(f"Error processing jobs for '{user_name}': {e}", exc_info=True)
+            job["assigned_to"] = default
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -897,13 +813,19 @@ async def main():
                 await update_job_in_sheet(google_sheet_updates)
             return
 
-        # Phase 5: categorize by rate band and apply per user
-        categorized_jobs = await categorize_jobs(filtered_jobs)
-        for user_name, jobs in categorized_jobs.items():
-            logger.info(f"Processing {len(jobs)} job(s) for user: {user_name}")
-            await process_jobs_for_user(user_name, jobs)
+        # Phase 5: assign an account per job, then notify a human to apply manually
+        assign_accounts(filtered_jobs)
+        sent = await asyncio.to_thread(send_jobs_for_review, filtered_jobs)
+        for job in filtered_jobs:
+            google_sheet_updates.append({
+                "key": job.get("link", ""),
+                "values": {
+                    "status": "ready_for_review" if sent else "review_email_failed",
+                    "applied_by": job.get("assigned_to", ""),
+                },
+            })
 
-        # Flush all queued sheet updates (filter reasons, apply status)
+        # Flush all queued sheet updates (filter reasons, review status)
         if google_sheet_updates:
             await update_job_in_sheet(google_sheet_updates)
 
