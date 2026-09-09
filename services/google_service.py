@@ -236,10 +236,21 @@ def parse_sheet_to_df(values: list[list[Any]]) -> pd.DataFrame:
     headers = [normalize_header(h) for h in values[0]]
     rows = values[1:]
 
-    # Pad short rows so every row matches the header length
-    padded = [row + [""] * (len(headers) - len(row)) for row in rows]
+    # Pad short rows and truncate long ones so every row matches the header
+    # length — a row with a stray extra cell must not crash the whole load.
+    normalized = []
+    for row in rows:
+        if len(row) > len(headers):
+            logger.warning(
+                "Row has %d cell(s) but only %d header(s); dropping extra cell(s): %s",
+                len(row), len(headers), row,
+            )
+            row = row[:len(headers)]
+        elif len(row) < len(headers):
+            row = row + [""] * (len(headers) - len(row))
+        normalized.append(row)
 
-    return pd.DataFrame(padded, columns=headers).fillna("")
+    return pd.DataFrame(normalized, columns=headers).fillna("")
 
 
 def get_sheet_data(
