@@ -12,25 +12,37 @@ logger = logging.getLogger(__name__)
 
 def _job_row(job: dict) -> str:
     link = escape(job.get("link", ""))
+    summary = job.get("history_flag_summary") or {}
+    why_flagged = "; ".join(summary.get("reasons", [])) or "—"
+    of_their_history = (
+        f"{summary['repeat_ratio']} repeat, {summary['low_funnel_ratio']} low-funnel"
+        if summary else "—"
+    )
     return f"""
         <tr>
             <td>{escape(job.get("title", "Untitled"))}</td>
             <td><a href="{link}">{link}</a></td>
             <td><strong>{escape(job.get("assigned_to", "") or "unassigned")}</strong></td>
+            <td>{escape(why_flagged)}</td>
+            <td>{escape(of_their_history)}</td>
         </tr>
     """
 
 
-def build_review_email_body(jobs: list[dict]) -> str:
+def build_review_email_body(jobs: list[dict], sheet_url: str | None = None) -> str:
     """Build the HTML body listing jobs ready for manual review."""
+    sheet_link_html = (
+        f'<p><a href="{escape(sheet_url)}">Open Google Sheet</a></p>' if sheet_url else ""
+    )
     return f"""
     <html>
     <body style="font-family: Arial, sans-serif;">
         <h2>Upwork — {len(jobs)} job(s) ready for review</h2>
         <p>Date: {datetime.now().strftime("%Y-%m-%d %H:%M")}</p>
+        {sheet_link_html}
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
             <tr style="background:#f0f0f0;">
-                <th>Job Title</th><th>Link</th><th>Apply From</th>
+                <th>Job Title</th><th>Link</th><th>Apply From</th><th>Why flagged</th><th>Of their history</th>
             </tr>
             {"".join(_job_row(job) for job in jobs)}
         </table>
@@ -40,7 +52,7 @@ def build_review_email_body(jobs: list[dict]) -> str:
     """
 
 
-def send_jobs_for_review(jobs: list[dict]) -> bool:
+def send_jobs_for_review(jobs: list[dict], sheet_url: str | None = None) -> bool:
     """Send the review email. Returns True if sent."""
     if not jobs:
         logger.info("No jobs to send for review.")
@@ -59,7 +71,7 @@ def send_jobs_for_review(jobs: list[dict]) -> bool:
     )
     email.send_email(
         subject=f"Upwork: {len(jobs)} job(s) ready for review",
-        body=build_review_email_body(jobs),
+        body=build_review_email_body(jobs, sheet_url),
         recipient_email=recipient,
         sender_email=get_env("SENDER_EMAIL"),
         sender_name=get_env("SENDER_NAME"),

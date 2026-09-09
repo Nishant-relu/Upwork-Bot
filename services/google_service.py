@@ -71,26 +71,44 @@ INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
+def _col_letter(n: int) -> str:
+    """1-indexed column number -> spreadsheet letter (1->A, 26->Z, 27->AA, ...)."""
+    letters = ""
+    while n > 0:
+        n, remainder = divmod(n - 1, 26)
+        letters = chr(65 + remainder) + letters
+    return letters
+
+
+# Source of truth for column order in `upwork_jobs_v2`. Adding a column is
+# "append one name here" — letters below are derived, never hand-counted.
+_COLUMN_ORDER: list[str] = [
+    "scrap_date",
+    "job_id",
+    "job_title",
+    "job_description",
+    "job_link",
+    "job_type",
+    "experience_level",
+    "estimated_budget",
+    "hourly_rate",
+    "duration",
+    "keywords",
+    "activity_data",
+    "client_data",
+    "filter_by",
+    "filter_reason",
+    "prediction",
+    "prediction_score",
+    *(f"history_{i}_{field}" for i in range(1, 11) for field in ("link", "details", "activity")),
+    "rehire_flag",
+    "low_funnel_flag",
+    "status",
+    "applied_by",
+]
+
 COLUMN_MAP: dict[str, str] = {
-    "scrap_date":        "A",
-    "job_id":            "B",
-    "job_title":         "C",
-    "job_description":   "D",
-    "job_link":          "E",
-    "job_type":          "F",
-    "experience_level":  "G",
-    "estimated_budget":  "H",
-    "hourly_rate":       "I",
-    "duration":          "J",
-    "keywords":          "K",
-    "activity_data":     "L",
-    "client_data":       "M",
-    "filter_by":         "N",
-    "filter_reason":     "O",
-    "prediction":        "P",
-    "prediction_score":  "Q",
-    "status":            "R",
-    "applied_by":        "S",
+    name: _col_letter(idx) for idx, name in enumerate(_COLUMN_ORDER, start=1)
 }
 
 
@@ -156,6 +174,30 @@ def get_google_sheets_service(
     except Exception:
         logger.exception("Failed to initialize Google Sheets service")
         raise
+
+
+@lru_cache(maxsize=8)
+def get_sheet_gid(spreadsheet_id: str, sheet_name: str) -> int | None:
+    """
+    Look up a tab's numeric gid (needed for a direct #gid= link to that tab).
+    Returns None if the sheet name isn't found.
+    """
+    try:
+        response = execute_with_retry(
+            lambda: get_google_sheets_service()
+            .spreadsheets()
+            .get(spreadsheetId=spreadsheet_id, fields="sheets.properties"),
+            f"get sheet gid [{sheet_name}]",
+        )
+        for sheet in response.get("sheets", []):
+            props = sheet.get("properties", {})
+            if props.get("title") == sheet_name:
+                return props.get("sheetId")
+        logger.warning(f"Sheet tab not found: {sheet_name}")
+        return None
+    except HttpError:
+        logger.exception("Failed to fetch sheet gid")
+        return None
 
 
 @lru_cache(maxsize=32)

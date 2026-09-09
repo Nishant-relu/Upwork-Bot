@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import random
+from collections import Counter
 from datetime import datetime, timedelta, timezone  # used in production 24h lookback
 
 import requests
@@ -16,18 +17,23 @@ from config.constants import APPLY_REDIRECT, NO_APPLY_ACCOUNTS
 from config.schema import UserConfig
 from upwork.auth import UpworkLoginManager
 from upwork.parser import JobHtmlParser
+from upwork.parsers.history_parser import ClientHistoryParser
 from upwork.selectors import UpworkJobDetailSelectors
 from upwork.parsers.utils import format_price as parse_price
 from utils import get_proxy, save_url, predict_job, format_prediction_score
 from utils.job_stats import update_job_in_sheet
 from utils.job_notification_service import send_jobs_for_review
-from services.google_service import batch_append_jobs, get_sheet_data
+from services.google_service import batch_append_jobs, get_sheet_data, get_sheet_gid
 
 logger = logging.getLogger(__name__)
 
 NOTI_API_URL = "https://www.upwork.com/api/v3/notification-feed/notifications/users"
 NOTI_LIMIT = 50
 JOB_REGEX = re.compile(r"\[\[(https?://[^\|]+)\|([^\]]+)\]\]")
+
+# Client-history jobs scraped per ML-passed job (Phase 4.5).
+HISTORY_LIMIT = 10
+MIN_HISTORY_DELAY_SEC, MAX_HISTORY_DELAY_SEC = 2, 6
 
 google_sheet_updates: list[dict] = []
 
@@ -692,7 +698,12 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
             passed_jobs.append(job)
             sheet_updates.append({
                 "key": link,
-                "values": {"prediction": str(result), "prediction_score": score},
+                "values": {
+                    "prediction": str(result),
+                    "prediction_score": score,
+                    "filter_by": "passed ml filter",
+                    "filter_reason": f"ML score {score} >= 70% threshold",
+                },
             })
         else:
             logger.info(f"ML REJECTED ({score}): {link}")
@@ -712,6 +723,206 @@ async def ml_filter_jobs(filtered_jobs: list[dict]) -> list[dict]:
 
     logger.info(f"ML filter complete: {len(passed_jobs)}/{len(filtered_jobs)} passed.")
     return passed_jobs
+
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 4.5: CLIENT HISTORY SCRAPING (ML-passed jobs only)
+# ═══════════════════════════════════════════════════════════════
+
+async def expand_client_history(page: Page, max_clicks: int = HISTORY_LIMIT) -> list[dict]:
+    """Click "View more" on the client-history panel until `max_clicks` history
+    rows are loaded or the button runs out. Returns up to `max_clicks` row dicts
+    ({link, freelancer_name, freelancer_id}).
+
+    Stays on `page` (the already-open job page) — no navigation happens here,
+    this only reveals more rows already meant to render on this page.
+    """
+    items = page.locator(f"{ClientHistoryParser.HISTORY_SECTION} {ClientHistoryParser.HISTORY_ITEM}")
+    view_more = page.locator('footer a:has-text("View more")').first
+
+    for _ in range(max_clicks):
+        html = await page.content()
+        rows = ClientHistoryParser.list_history_links(html, page.url, limit=max_clicks)
+        if len(rows) >= max_clicks:
+            break
+
+        try:
+            if not await view_more.is_visible(timeout=2000):
+                break
+        except Exception:
+            break
+
+        before = await items.count()
+        await view_more.click()
+
+        for _ in range(20):
+            await page.wait_for_timeout(500)
+            if await items.count() > before:
+                break
+        else:
+            logger.warning("Clicked 'View more' but no new history rows appeared.")
+            break
+
+    html = await page.content()
+    return ClientHistoryParser.list_history_links(html, page.url, limit=max_clicks)
+
+
+async def fetch_history_job(history_page: Page, url: str) -> tuple[dict | None, dict | None]:
+    """Open a history job's own page in `history_page` (a second tab) and return
+    its (summary, activity) pair. Caller owns the tab's lifecycle.
+
+    Returns (None, None) if the fetch itself fails.
+    """
+    loaded = await _fetch_page(history_page, url)
+    if not loaded:
+        return None, None
+    html = await history_page.content()
+    return ClientHistoryParser.extract_summary(html), ClientHistoryParser.extract_activity(html)
+
+
+def _is_low_funnel(activity: dict) -> bool:
+    """True if a past job shows zero client engagement: no interviews, no invites.
+
+    Matches labels by substring/lowercase rather than an exact string since the
+    "Activity on this job" panel's labels come straight from live Upwork markup.
+    """
+    def _count(label_substr: str) -> int:
+        for key, val in activity.items():
+            if label_substr in key.lower():
+                if isinstance(val, dict):  # {"min": x, "max": y} shape from _parse_activity_value
+                    return val.get("max", 0)
+                try:
+                    return int(str(val).strip())
+                except (ValueError, TypeError):
+                    return 0
+        return 0
+
+    return _count("interview") == 0 and _count("invite") == 0
+
+
+async def scrape_client_history_for_jobs(jobs: list[dict]) -> None:
+    """For each job (already ML-filter passed), open its page, expand the
+    client-history panel, and scrape up to HISTORY_LIMIT past jobs. Queues
+    history_N_link/details/activity sheet updates per job, plus two computed
+    signals derived from that history:
+      - rehire_flag: the same freelancer appears on 2+ of the client's past jobs.
+      - low_funnel_flag: how many of the scraped past jobs show zero client
+        engagement (no interviews, no invites), e.g. "2/7 (history_2, history_5)".
+    When either signal fires, filter_by/filter_reason are overwritten so the
+    Sheet reflects the job's furthest-reached, most specific status.
+    """
+    if not jobs:
+        logger.info("No jobs to scrape client history for.")
+        return
+
+    logger.info(f"Scraping client history for {len(jobs)} ML-passed job(s).")
+
+    worker = bot_settings.get_worker_user()
+    proxy = get_proxy(worker.name)
+    cookies_path = paths.COOKIES_DIR / f"{worker.name}_cookies.json"
+
+    try:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(channel="chrome", headless=False, proxy=proxy)
+            context_handler = ContextHandler(browser, cookies_path)
+            context = await context_handler.create()
+            page = await context.new_page()
+
+            login_manager = UpworkLoginManager(page)
+            await login_manager.validate_or_login(worker)
+
+            for job in jobs:
+                link = job.get("link", "")
+                try:
+                    if not await _fetch_page(page, link):
+                        logger.warning(f"Could not reopen job page for history scrape: {link}")
+                        continue
+
+                    history_rows = await expand_client_history(page, max_clicks=HISTORY_LIMIT)
+                    logger.info(f"Found {len(history_rows)} client-history job(s) for: {link}")
+                    if not history_rows:
+                        continue
+
+                    history_page = await context.new_page()
+                    values = {}
+                    fetched: list[tuple[dict, dict | None]] = []  # (row, activity) per slot
+                    try:
+                        for h_idx, row in enumerate(history_rows, start=1):
+                            h_url = row["link"]
+                            try:
+                                summary, activity = await fetch_history_job(history_page, h_url)
+                            except Exception as h_exc:
+                                logger.warning(f"History job failed ({h_url}): {h_exc}")
+                                summary, activity = None, None
+
+                            if summary is not None:
+                                summary = {
+                                    **summary,
+                                    "freelancer_name": row["freelancer_name"],
+                                    "freelancer_id": row["freelancer_id"],
+                                }
+
+                            values[f"history_{h_idx}_link"] = h_url
+                            values[f"history_{h_idx}_details"] = json.dumps(summary) if summary is not None else ""
+                            values[f"history_{h_idx}_activity"] = json.dumps(activity) if activity is not None else ""
+                            fetched.append((row, activity))
+
+                            if h_idx < len(history_rows):
+                                await asyncio.sleep(random.uniform(MIN_HISTORY_DELAY_SEC, MAX_HISTORY_DELAY_SEC))
+                    finally:
+                        await history_page.close()
+
+                    freelancer_ids = [row["freelancer_id"] for row, _ in fetched if row.get("freelancer_id")]
+                    id_counts = Counter(freelancer_ids)
+                    repeat_ids = {fid for fid, count in id_counts.items() if count >= 2}
+                    repeat_names = sorted({
+                        row["freelancer_name"]
+                        for row, _ in fetched
+                        if row.get("freelancer_id") in repeat_ids and row.get("freelancer_name")
+                    })
+                    rehire_flag = bool(repeat_ids)
+
+                    low_funnel_slots = [
+                        f"history_{h_idx}"
+                        for h_idx, (_, activity) in enumerate(fetched, start=1)
+                        if activity and _is_low_funnel(activity)
+                    ]
+
+                    total = len(fetched)
+                    values["rehire_flag"] = rehire_flag
+                    values["low_funnel_flag"] = (
+                        f"{len(low_funnel_slots)}/{total} ({', '.join(low_funnel_slots)})"
+                        if low_funnel_slots else f"0/{total}"
+                    )
+
+                    reasons = []
+                    if rehire_flag:
+                        reasons.append(f"repeat freelancer(s): {', '.join(repeat_names)}")
+                    if low_funnel_slots:
+                        reasons.append("low-funnel hire (hired with ~0 visible interviewing/invites)")
+
+                    if reasons:
+                        values["filter_by"] = "flagged - client history"
+                        values["filter_reason"] = "; ".join(reasons)
+
+                    # Stamped onto the job dict (not just `values`) so Phase 5's
+                    # review email can show why a job was flagged without
+                    # re-reading the Sheet.
+                    job["history_flag_summary"] = {
+                        "reasons": reasons,
+                        "repeat_ratio": f"{len(repeat_ids)}/{total}",
+                        "low_funnel_ratio": f"{len(low_funnel_slots)}/{total}",
+                    }
+
+                    google_sheet_updates.append({"key": link, "values": values})
+
+                except Exception as e:
+                    logger.warning(f"Client history scrape failed for {link}: {e}")
+
+            await context_handler.destroy()
+
+    except Exception as e:
+        logger.error(f"Error in client-history scraping phase: {e}", exc_info=True)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -813,9 +1024,16 @@ async def main():
                 await update_job_in_sheet(google_sheet_updates)
             return
 
+        # Phase 4.5: client history scraping (only for jobs that passed ML filter)
+        await scrape_client_history_for_jobs(filtered_jobs)
+
         # Phase 5: assign an account per job, then notify a human to apply manually
         assign_accounts(filtered_jobs)
-        sent = await asyncio.to_thread(send_jobs_for_review, filtered_jobs)
+        gid = await asyncio.to_thread(get_sheet_gid, bot_settings.SPREADSHEET_ID, bot_settings.JOBS_SHEET_NAME)
+        sheet_url = f"https://docs.google.com/spreadsheets/d/{bot_settings.SPREADSHEET_ID}/edit" + (
+            f"#gid={gid}" if gid is not None else ""
+        )
+        sent = await asyncio.to_thread(send_jobs_for_review, filtered_jobs, sheet_url)
         for job in filtered_jobs:
             google_sheet_updates.append({
                 "key": job.get("link", ""),
