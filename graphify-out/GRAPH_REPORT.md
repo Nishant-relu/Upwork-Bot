@@ -1,31 +1,31 @@
 # Graph Report - upwork_bot  (2026-09-09)
 
 ## Corpus Check
-- 66 files · ~22,827 words
+- 66 files · ~22,864 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 493 nodes · 1033 edges · 36 communities (30 shown, 6 thin omitted)
+- 493 nodes · 1033 edges · 33 communities (28 shown, 5 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 40 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `79cb6c2e`
+- Built from commit: `451659ad`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- main.py
-- .filter_jobs
+- track_job_activity.py
+- JobFilter
 - utils/__init__.py
-- .handle_bid_form
+- UpworkJobApplication
 - collect_activity_records
 - google_service.py
 - selectors/__init__.py
-- browser/utils.py
+- Page
 - datetime
 - .scrape_jobs
-- settings.py
+- UserConfig
 - UpworkLoginManager
 - BeautifulSoup
 - deploy.sh
@@ -34,15 +34,12 @@
 - filter_stats.py
 - save_url
 - main_2.py
-- save_url
-- scrape_client_history_for_jobs
-- scrape_job_page
-- constants.py
-- get_oauth_token
-- proposals_parser.py
+- JobHtmlParser
+- main.py
+- job_stats.py
+- PathConfig
 - .__init__
-- .__init__
-- .__init__
+- filter.py
 - CLAUDE.md
 - Page
 - Any
@@ -61,53 +58,49 @@
 10. `configure_logging()` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `get_oauth_token()` --calls--> `get_proxy()`  [INFERRED]
-  main_2.py → utils/proxy.py
-- `scrape_new_jobs()` --calls--> `get_proxy()`  [INFERRED]
-  main_2.py → utils/proxy.py
-- `ml_filter_jobs()` --calls--> `format_prediction_score()`  [INFERRED]
-  main_2.py → utils/ml_filter.py
-- `ml_filter_jobs()` --indirect_call--> `predict_job()`  [INFERRED]
-  main_2.py → utils/ml_filter.py
-- `expand_client_history()` --uses--> `ClientHistoryParser`  [INFERRED]
-  main_2.py → upwork/parsers/history_parser.py
+- `main()` --indirect_call--> `get_sheet_gid()`  [INFERRED]
+  main_2.py → services/google_service.py
+- `main()` --uses--> `ContextHandler`  [INFERRED]
+  upwork/apply.py → browser/context.py
+- `main()` --uses--> `ContextHandler`  [INFERRED]
+  upwork/auth.py → browser/context.py
+- `attempt_job_application()` --uses--> `UserConfig`  [INFERRED]
+  main.py → config/schema.py
+- `scrape_and_filter_jobs()` --uses--> `UserConfig`  [INFERRED]
+  main.py → config/schema.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (36 total, 6 thin omitted)
+## Communities (33 total, 5 thin omitted)
 
-### Community 0 - "main.py"
+### Community 0 - "track_job_activity.py"
 Cohesion: 0.07
-Nodes (49): Browser, ContextHandler, Path, main(), dismiss_cookies_popup(), handle_captcha(), Dismiss the cookie consent popup on websites using OneTrust, if present., Handle Captcha if present (+41 more)
+Nodes (34): Browser, AntiCloudflare, Moves mouse from (x1, y1) to (x2, y2) using sinusoidal easing, main(), PatchrightBrowser, get_proxy_ip(), Page, Validates whether the current IP matches the expected proxy IP. (+26 more)
 
-### Community 1 - ".filter_jobs"
-Cohesion: 0.15
-Nodes (8): Apply initial filtering rules: duplicates, low budget, keywords., Apply both filters on a job entry., Validate or login using cookies., Apply filtering on a list of job data., Check whether a job URL has already been processed., merge_counters(), Recursively merge two dicts d1 and d2 that have the same structure. Wherever…, save_job_filter_stats()
+### Community 1 - "JobFilter"
+Cohesion: 0.23
+Nodes (7): JobFilter, Apply initial filtering rules: duplicates, low budget, keywords., Handles filtering logic for Upwork job listings based on predefined rules, Apply both filters on a job entry., Validate or login using cookies., Apply filtering on a list of job data., Check whether a job URL has already been processed.
 
 ### Community 2 - "utils/__init__.py"
-Cohesion: 0.06
-Nodes (39): ml_filter_jobs(), Third filtering layer using the ML prediction API. Only jobs with probability…, get_daily_report(), get_failed_jobs(), main(), send_daily_report(), send_faild_jobs(), normalize_country() (+31 more)
+Cohesion: 0.07
+Nodes (31): get_daily_report(), get_failed_jobs(), main(), send_daily_report(), send_faild_jobs(), get_credentials(), gets login credentials from env based on name of user., download_file() (+23 more)
 
-### Community 3 - ".handle_bid_form"
-Cohesion: 0.13
-Nodes (9): Fill out the cover letter on the job application form., Check if dropdown has the expected selected value., Accept the "Understand and Agree" consent form if present., Fill out custom job questions with provided answers., Verify proposal submission, Fill and submit the hourly-rate-based job application form., Fill and submit bid based job application form, Fill and submit the milestone/project-based job application form. (+1 more)
+### Community 3 - "UpworkJobApplication"
+Cohesion: 0.07
+Nodes (23): main(), Page, Extract job title, description, and custom questions from the HTML source., Extract job details from the current page., Fill out the cover letter on the job application form., Check if dropdown has the expected selected value., Automates the process of applying for jobs on Upwork using a Selenium-based…, Accept the "Understand and Agree" consent form if present. (+15 more)
 
 ### Community 4 - "collect_activity_records"
-Cohesion: 0.19
-Nodes (12): collect_activity_records(), determine_job_active_status(), extract_job_activity(), open_page_with_retry(), Any, Page, Navigate to a URL with retry + captcha handling. Returns True if page…, Extract activity metrics from job details page. (+4 more)
+Cohesion: 0.29
+Nodes (10): collect_activity_records(), determine_job_active_status(), extract_job_activity(), open_page_with_retry(), Any, Page, Navigate to a URL with retry + captcha handling. Returns True if page…, Extract activity metrics from job details page. (+2 more)
 
 ### Community 5 - "google_service.py"
-Cohesion: 0.09
-Nodes (44): Any, DataFrame, Path, Resource, batch_append_jobs(), _batch_update(), batch_update_by_key(), build_row_index_by_column() (+36 more)
+Cohesion: 0.11
+Nodes (38): Any, DataFrame, Path, Resource, batch_append_jobs(), _batch_update(), batch_update_by_key(), build_row_index_by_column() (+30 more)
 
 ### Community 6 - "selectors/__init__.py"
-Cohesion: 0.11
-Nodes (16): ClientInfoParser, JobCardParser, Tag, Parses a single job card from the job listings page., find_element(), format_price(), format_text(), Tag (+8 more)
-
-### Community 7 - "browser/utils.py"
-Cohesion: 0.09
-Nodes (18): AntiCloudflare, Page, Moves mouse from (x1, y1) to (x2, y2) using sinusoidal easing, PatchrightBrowser, get_proxy_ip(), Page, Validates whether the current IP matches the expected proxy IP., Fetch the current public IP address as seen by the browser. (+10 more)
+Cohesion: 0.08
+Nodes (21): ActivityParser, Extracts activity stats from job HTML., ClientInfoParser, Extracts client info from job HTML., JobCardParser, Tag, Parses a single job card from the job listings page., find_element() (+13 more)
 
 ### Community 8 - "datetime"
 Cohesion: 0.13
@@ -117,17 +110,17 @@ Nodes (25): clean_dated_json_files(), clean_log_folders(), clean_screenshot_file
 Cohesion: 0.25
 Nodes (5): Tag, Save scraped data to a JSON file., Scrape job listings from the given URL or default Upwork job URL., Path, save_scraped_jobs()
 
-### Community 10 - "settings.py"
-Cohesion: 0.14
-Nodes (16): PathConfig, Ensure all required directories exist., Configuration class for managing project directory paths., Ensure essential files exist., ProposalType, Enum, build_settings(), load_settings_from_sheet() (+8 more)
+### Community 10 - "UserConfig"
+Cohesion: 0.22
+Nodes (15): ProposalType, Enum, UserConfig, build_settings(), load_settings_from_sheet(), load_user_config_from_sheet(), Any, Load user configurations from Google Sheets. (+7 more)
 
 ### Community 11 - "UpworkLoginManager"
-Cohesion: 0.18
-Nodes (10): Page, Standard Login Procedure, Validate login using session or fallback to credentials., Manages the login process for Upwork, Initialize with a Patchright., Handles Upwork security question if prompted., Validates if login was successful by checking for jobs feed., Check if session still active. (+2 more)
+Cohesion: 0.17
+Nodes (11): main(), Page, Standard Login Procedure, Validate login using session or fallback to credentials., Manages the login process for Upwork, Initialize with a Patchright., Handles Upwork security question if prompted., Validates if login was successful by checking for jobs feed. (+3 more)
 
 ### Community 12 - "BeautifulSoup"
-Cohesion: 0.18
-Nodes (8): BeautifulSoup, ClientHistoryParser, Proposals come as a range ("5 to 10", "Less than 5", "50+") -> {min, max};…, Activity on this job" data off a history job's own page., Freelancer name + id off a history row's "To freelancer: <a>Name</a>" line.…, Rows out of the currently loaded "Client's recent history" panel, most- recent…, Parses the "Client's recent history" panel on a job detail page, and the…, title / description / skills only, for a history job we don't need the full…
+Cohesion: 0.09
+Nodes (16): BeautifulSoup, fetch_history_job(), Open a history job's own page in `history_page` (a second tab) and return its…, AttachmentParser, extracts all the attachments, ClientHistoryParser, Proposals come as a range ("5 to 10", "Less than 5", "50+") -> {min, max};…, Activity on this job" data off a history job's own page. (+8 more)
 
 ### Community 13 - "deploy.sh"
 Cohesion: 0.48
@@ -150,51 +143,47 @@ Cohesion: 0.50
 Nodes (3): Path, Save a job URL and optional reason for skipping to the file., save_url()
 
 ### Community 18 - "main_2.py"
-Cohesion: 0.18
-Nodes (15): assign_accounts(), deduplicate_jobs(), extract_job_id_from_url(), get_existing_sheet_job_ids(), main(), ml_filter_jobs(), Extract job ID token from Upwork job URL e.g. '~02abc123'., Fetch all job_id values already in Google Sheet. Used at pipeline start to skip… (+7 more)
+Cohesion: 0.07
+Nodes (41): apply_filter_1(), apply_filter_2(), assign_accounts(), collect_all_notifications(), deduplicate_jobs(), expand_client_history(), extract_job_id_from_url(), fetch_notifications() (+33 more)
 
-### Community 23 - "save_url"
-Cohesion: 0.20
-Nodes (10): apply_filter_1(), apply_filter_2(), filter_jobs(), Filter 1: budget < MIN_BUDGET, forbidden keywords. Dedup is already handled in…, Filter 2: client data checks — total spent, hourly rate field, banned location,…, Run Filter 1 and Filter 2 on scraped jobs. Queues sheet updates for filter…, Filter based on client data fields., Second layer of filtering using job detail page content. (+2 more)
+### Community 23 - "JobHtmlParser"
+Cohesion: 0.27
+Nodes (5): Filter based on client data fields., Second layer of filtering using job detail page content., JobHtmlParser, Save a job URL and optional reason for skipping to the file., save_url()
 
-### Community 24 - "scrape_client_history_for_jobs"
-Cohesion: 0.24
-Nodes (11): expand_client_history(), fetch_history_job(), _fetch_page(), _is_low_funnel(), Navigate to URL with retry and captcha handling. Returns True on success., Click "View more" on the client-history panel until `max_clicks` history rows…, Open a history job's own page in `history_page` (a second tab) and return its…, True if a past job shows zero client engagement: no interviews, no invites.… (+3 more)
+### Community 24 - "main.py"
+Cohesion: 0.17
+Nodes (17): attempt_job_application(), categorize_jobs(), extract_job_id(), main(), ml_filter_jobs(), process_jobs_for_user(), Applies to a list of jobs for a given user., Third filtering layer using the ML prediction API. Only jobs with probability… (+9 more)
 
-### Community 25 - "scrape_job_page"
-Cohesion: 0.18
-Nodes (7): parse_job_detail_html(), Navigate to one job detail page and extract all fields needed for filtering and…, Parse job-specific fields from the job listing detail page HTML. Selectors…, scrape_job_page(), AttachmentParser, extracts all the attachments, Extracts client info from job HTML.
+### Community 25 - "job_stats.py"
+Cohesion: 0.32
+Nodes (7): deduplicate_scraped_jobs(), merge_counters(), Deduplicate scraped jobs based on job link., Save scraped jobs data to Google Sheets, Recursively merge two dicts d1 and d2 that have the same structure. Wherever…, save_job_filter_stats(), save_jobs_to_sheet()
 
-### Community 26 - "constants.py"
-Cohesion: 0.22
-Nodes (4): main(), Manually refresh cookies. python refresh_cookies.py # every account except the…, refresh(), InvitationParser
-
-### Community 27 - "get_oauth_token"
-Cohesion: 0.29
-Nodes (7): collect_all_notifications(), fetch_notifications(), get_oauth_token(), Launch a fresh browser for one applicant, login, extract oauth2_global_js_token…, Paginate through notifications and collect job/new ones from the last 24h.…, Loop all applicant accounts, extract OAuth token via browser, fetch latest…, UserConfig
-
-### Community 28 - "proposals_parser.py"
+### Community 26 - "PathConfig"
 Cohesion: 0.38
-Nodes (3): ProposalsParser, Extracts active proposals data from HTML., ProposalSelectors
+Nodes (4): PathConfig, Ensure all required directories exist., Configuration class for managing project directory paths., Ensure essential files exist.
 
 ### Community 29 - ".__init__"
 Cohesion: 0.50
 Nodes (3): Page, Path, Initialize with a SeleniumBase browser instance.
 
+### Community 31 - "filter.py"
+Cohesion: 0.18
+Nodes (9): ContextHandler, Path, Scrape and filter jobs from Upwork using the default or given user., scrape_and_filter_jobs(), main(), JobScraper, Page, A scraper class to extract job listings from Upwork. (+1 more)
+
 ## Knowledge Gaps
-- **2 isolated node(s):** `graphify`, `DISPLAY`
+- **2 isolated node(s):** `DISPLAY`, `graphify`
   These have ≤1 connection - possible missing edges or undocumented components.
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `UpworkJobApplication` connect `main.py` to `.handle_bid_form`, `.__init__`, `browser/utils.py`?**
+- **Why does `UpworkJobApplication` connect `UpworkJobApplication` to `main.py`, `track_job_activity.py`, `UserConfig`?**
   _High betweenness centrality (0.114) - this node is a cross-community bridge._
-- **Why does `UpworkLoginManager` connect `UpworkLoginManager` to `main.py`, `.filter_jobs`, `google_service.py`, `main_2.py`, `scrape_client_history_for_jobs`, `get_oauth_token`?**
+- **Why does `UpworkLoginManager` connect `UpworkLoginManager` to `track_job_activity.py`, `JobFilter`, `UpworkJobApplication`, `google_service.py`, `UserConfig`, `main_2.py`, `main.py`, `filter.py`?**
   _High betweenness centrality (0.068) - this node is a cross-community bridge._
-- **Why does `handle_captcha()` connect `main.py` to `scrape_client_history_for_jobs`, `UpworkLoginManager`, `collect_activity_records`, `browser/utils.py`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+- **Why does `handle_captcha()` connect `track_job_activity.py` to `UpworkJobApplication`, `collect_activity_records`, `UpworkLoginManager`, `main_2.py`, `filter.py`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `UpworkJobApplication` (e.g. with `attempt_job_application()` and `UserConfig`) actually correct?**
   _`UpworkJobApplication` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 3 inferred relationships involving `UpworkLoginManager` (e.g. with `main()` and `UserConfig`) actually correct?**

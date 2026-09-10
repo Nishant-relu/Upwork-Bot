@@ -68,13 +68,9 @@ class AntiCloudflare:
         screen_x = await self.page.evaluate("() => window.screenX")
         screen_y = await self.page.evaluate("() => window.screenY")
 
-        # Cloudflare Turnstile's checkbox sits near the widget's left edge,
-        # vertically centered, regardless of the widget's overall box size —
-        # so the click point is a fraction of the actual box, not a fixed pixel
-        # offset (a fixed offset falls outside shorter boxes, missing the
-        # checkbox and landing on unrelated page elements instead).
-        offset_x = rect['width'] * random.uniform(0.09, 0.13)
-        offset_y = rect['height'] * random.uniform(0.45, 0.55)
+        # Calculate screen-level coordinates
+        offset_x = 30 + random.randint(3, 7)
+        offset_y = 120 + random.randint(3, 7)
         target_x = screen_x + rect['x'] + offset_x
         target_y = screen_y + rect['y'] + offset_y
 
@@ -82,9 +78,19 @@ class AntiCloudflare:
             f"Captcha box: x={rect['x']:.0f} y={rect['y']:.0f} "
             f"w={rect['width']:.0f} h={rect['height']:.0f} | "
             f"window offset: ({screen_x}, {screen_y}) | "
-            f"click offset within box: (+{offset_x:.0f}, +{offset_y:.0f}) | "
+            f"click offset within box: (+{offset_x}, +{offset_y}) | "
             f"screen target: ({target_x:.0f}, {target_y:.0f})"
         )
+
+        # The click offset is hardcoded, so it can fall outside a short captcha box
+        # and land on unrelated UI (e.g. opening the sidebar, whose overlay then
+        # blocks every later click on the page).
+        if offset_x > rect['width'] or offset_y > rect['height']:
+            logger.warning(
+                f"Captcha click offset (+{offset_x}, +{offset_y}) falls OUTSIDE the "
+                f"captcha box ({rect['width']:.0f}x{rect['height']:.0f}). "
+                "The click may land on unrelated page elements."
+            )
 
         # target_x, target_y = screen_coord_x, screen_coord_y
         start_x, start_y = self.mouse.position
