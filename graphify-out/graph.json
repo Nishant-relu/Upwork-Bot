@@ -4,19 +4,6 @@
   "graph": {},
   "nodes": [
     {
-      "id": "browser_anti_captcha_anticloudflare",
-      "label": "AntiCloudflare",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "anticloudflare",
-      "source_file": "browser/anti_captcha.py",
-      "source_location": "L13"
-    },
-    {
       "id": "browser_manager_patchrightbrowser",
       "label": "PatchrightBrowser",
       "_callable": true,
@@ -28,6 +15,19 @@
       "norm_label": "patchrightbrowser",
       "source_file": "browser/manager.py",
       "source_location": "L5"
+    },
+    {
+      "id": "config_paths_pathconfig",
+      "label": "PathConfig",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "code",
+      "norm_label": "pathconfig",
+      "source_file": "config/paths.py",
+      "source_location": "L4"
     },
     {
       "id": "upwork_apply_proposaltypexpath",
@@ -43,17 +43,17 @@
       "source_location": "L19"
     },
     {
-      "id": "upwork_filter_jobfilter",
-      "label": "JobFilter",
+      "id": "browser_anti_captcha_anticloudflare",
+      "label": "AntiCloudflare",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
+      "community_name": "handle_captcha",
       "file_type": "code",
-      "norm_label": "jobfilter",
-      "source_file": "upwork/filter.py",
-      "source_location": "L24"
+      "norm_label": "anticloudflare",
+      "source_file": "browser/anti_captcha.py",
+      "source_location": "L13"
     },
     {
       "id": "config_schema_proposaltype",
@@ -108,19 +108,6 @@
       "source_location": "L17"
     },
     {
-      "id": "upwork_parsers_attachment_parser_attachmentparser",
-      "label": "AttachmentParser",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "attachmentparser",
-      "source_file": "upwork/parsers/attachment_parser.py",
-      "source_location": "L7"
-    },
-    {
       "id": "upwork_parsers_history_parser_clienthistoryparser",
       "label": "ClientHistoryParser",
       "_callable": true,
@@ -132,45 +119,6 @@
       "norm_label": "clienthistoryparser",
       "source_file": "upwork/parsers/history_parser.py",
       "source_location": "L6"
-    },
-    {
-      "id": "upwork_parsers_invitation_parser_invitationparser",
-      "label": "InvitationParser",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "invitationparser",
-      "source_file": "upwork/parsers/invitation_parser.py",
-      "source_location": "L8"
-    },
-    {
-      "id": "upwork_parsers_proposals_parser_proposalsparser",
-      "label": "ProposalsParser",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "proposalsparser",
-      "source_file": "upwork/parsers/proposals_parser.py",
-      "source_location": "L9"
-    },
-    {
-      "id": "upwork_selectors_proposals_page_selectors_proposalselectors",
-      "label": "ProposalSelectors",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "proposalselectors",
-      "source_file": "upwork/selectors/proposals_page_selectors.py",
-      "source_location": "L2"
     },
     {
       "id": "upwork_filters_filter_1_filter1",
@@ -225,6 +173,32 @@
       "source_location": "L22"
     },
     {
+      "id": "upwork_parsers_proposals_parser_proposalsparser",
+      "label": "ProposalsParser",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "proposals_parser.py",
+      "file_type": "code",
+      "norm_label": "proposalsparser",
+      "source_file": "upwork/parsers/proposals_parser.py",
+      "source_location": "L9"
+    },
+    {
+      "id": "upwork_selectors_proposals_page_selectors_proposalselectors",
+      "label": "ProposalSelectors",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "proposals_parser.py",
+      "file_type": "code",
+      "norm_label": "proposalselectors",
+      "source_file": "upwork/selectors/proposals_page_selectors.py",
+      "source_location": "L2"
+    },
+    {
       "id": "utils_email_service_email",
       "label": "Email",
       "_callable": true,
@@ -238,30 +212,82 @@
       "source_location": "L12"
     },
     {
+      "id": "browser_context_contexthandler",
+      "label": "ContextHandler",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "contexthandler",
+      "source_file": "browser/context.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "upwork_filter_jobfilter",
+      "label": "JobFilter",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "jobfilter",
+      "source_file": "upwork/filter.py",
+      "source_location": "L24"
+    },
+    {
       "id": "upwork_parser_jobhtmlparser",
       "label": "JobHtmlParser",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 23,
-      "community_name": "JobHtmlParser",
+      "community": 24,
+      "community_name": "main.py",
       "file_type": "code",
       "norm_label": "jobhtmlparser",
       "source_file": "upwork/parser.py",
       "source_location": "L12"
     },
     {
-      "id": "config_paths_pathconfig",
-      "label": "PathConfig",
+      "id": "upwork_scraper_jobscraper",
+      "label": "JobScraper",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "jobscraper",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "upwork_parsers_invitation_parser_invitationparser",
+      "label": "InvitationParser",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 26,
-      "community_name": "PathConfig",
+      "community_name": "invitation_parser.py",
       "file_type": "code",
-      "norm_label": "pathconfig",
-      "source_file": "config/paths.py",
-      "source_location": "L4"
+      "norm_label": "invitationparser",
+      "source_file": "upwork/parsers/invitation_parser.py",
+      "source_location": "L8"
+    },
+    {
+      "id": "upwork_parsers_attachment_parser_attachmentparser",
+      "label": "AttachmentParser",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": ".parse",
+      "file_type": "code",
+      "norm_label": "attachmentparser",
+      "source_file": "upwork/parsers/attachment_parser.py",
+      "source_location": "L7"
     },
     {
       "id": "upwork_apply_upworkjobapplication",
@@ -275,32 +301,6 @@
       "norm_label": "upworkjobapplication",
       "source_file": "upwork/apply.py",
       "source_location": "L24"
-    },
-    {
-      "id": "browser_context_contexthandler",
-      "label": "ContextHandler",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": "contexthandler",
-      "source_file": "browser/context.py",
-      "source_location": "L4"
-    },
-    {
-      "id": "upwork_scraper_jobscraper",
-      "label": "JobScraper",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": "jobscraper",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L20"
     },
     {
       "id": "upwork_parsers_activity_parser_activityparser",
@@ -407,54 +407,6 @@
       "source_location": "L1"
     },
     {
-      "id": "browser_anti_captcha_anticloudflare_bypass",
-      "label": ".bypass()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": ".bypass()",
-      "source_file": "browser/anti_captcha.py",
-      "source_location": "L52"
-    },
-    {
-      "id": "browser_anti_captcha_anticloudflare_check",
-      "label": ".check()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": ".check()",
-      "source_file": "browser/anti_captcha.py",
-      "source_location": "L18"
-    },
-    {
-      "id": "browser_anti_captcha_anticloudflare_human_like_move",
-      "label": ".human_like_move()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": ".human_like_move()",
-      "source_file": "browser/anti_captcha.py",
-      "source_location": "L34"
-    },
-    {
-      "id": "browser_anti_captcha_anticloudflare_init",
-      "label": ".__init__()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "browser/anti_captcha.py",
-      "source_location": "L14"
-    },
-    {
       "id": "browser_manager_main",
       "label": "main()",
       "_callable": true,
@@ -503,90 +455,6 @@
       "source_location": "L6"
     },
     {
-      "id": "browser_proxy_validation_get_proxy_ip",
-      "label": "get_proxy_ip()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "get_proxy_ip()",
-      "source_file": "browser/proxy_validation.py",
-      "source_location": "L8"
-    },
-    {
-      "id": "browser_proxy_validation_validate_proxy_ip",
-      "label": "validate_proxy_ip()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "validate_proxy_ip()",
-      "source_file": "browser/proxy_validation.py",
-      "source_location": "L32"
-    },
-    {
-      "id": "browser_utils_capture_sidebar_overlay_state",
-      "label": "_capture_sidebar_overlay_state()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "_capture_sidebar_overlay_state()",
-      "source_file": "browser/utils.py",
-      "source_location": "L110"
-    },
-    {
-      "id": "browser_utils_dismiss_cookies_popup",
-      "label": "dismiss_cookies_popup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "dismiss_cookies_popup()",
-      "source_file": "browser/utils.py",
-      "source_location": "L145"
-    },
-    {
-      "id": "browser_utils_dismiss_fte_tour",
-      "label": "_dismiss_fte_tour()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "_dismiss_fte_tour()",
-      "source_file": "browser/utils.py",
-      "source_location": "L66"
-    },
-    {
-      "id": "browser_utils_dismiss_sidebar_overlay",
-      "label": "dismiss_sidebar_overlay()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "dismiss_sidebar_overlay()",
-      "source_file": "browser/utils.py",
-      "source_location": "L19"
-    },
-    {
-      "id": "browser_utils_handle_captcha",
-      "label": "handle_captcha()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "handle_captcha()",
-      "source_file": "browser/utils.py",
-      "source_location": "L172"
-    },
-    {
       "id": "config_logger_config_configure_logging",
       "label": "configure_logging()",
       "_callable": true,
@@ -609,6 +477,42 @@
       "norm_label": "ist_time_converter()",
       "source_file": "config/logger_config.py",
       "source_location": "L11"
+    },
+    {
+      "id": "config_paths_pathconfig_create_directories",
+      "label": "._create_directories()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "code",
+      "norm_label": "._create_directories()",
+      "source_file": "config/paths.py",
+      "source_location": "L36"
+    },
+    {
+      "id": "config_paths_pathconfig_create_files",
+      "label": "._create_files()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "code",
+      "norm_label": "._create_files()",
+      "source_file": "config/paths.py",
+      "source_location": "L56"
+    },
+    {
+      "id": "config_paths_pathconfig_init",
+      "label": ".__init__()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "code",
+      "norm_label": ".__init__()",
+      "source_file": "config/paths.py",
+      "source_location": "L9"
     },
     {
       "id": "refresh_cookies_main",
@@ -635,28 +539,16 @@
       "source_location": "L23"
     },
     {
-      "id": "upwork_filter_jobfilter_fetch_page",
-      "label": "._fetch_page()",
+      "id": "upwork_filters_utils_save_url",
+      "label": "save_url()",
       "_callable": true,
       "_origin": "ast",
       "community": 0,
       "community_name": "track_job_activity.py",
       "file_type": "code",
-      "norm_label": "._fetch_page()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L67"
-    },
-    {
-      "id": "upwork_scraper_jobscraper_fetch_page",
-      "label": "._fetch_page()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "._fetch_page()",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L38"
+      "norm_label": "save_url()",
+      "source_file": "upwork/filters/utils.py",
+      "source_location": "L8"
     },
     {
       "id": "upwork_scraper_main",
@@ -683,64 +575,172 @@
       "source_location": "L11"
     },
     {
-      "id": "upwork_filter_jobfilter_apply_filter",
-      "label": ".apply_filter()",
+      "id": "browser_anti_captcha_anticloudflare_bypass",
+      "label": ".bypass()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
+      "community_name": "handle_captcha",
       "file_type": "code",
-      "norm_label": ".apply_filter()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L434"
+      "norm_label": ".bypass()",
+      "source_file": "browser/anti_captcha.py",
+      "source_location": "L52"
     },
     {
-      "id": "upwork_filter_jobfilter_check_session_or_login",
-      "label": ".check_session_or_login()",
+      "id": "browser_anti_captcha_anticloudflare_check",
+      "label": ".check()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
+      "community_name": "handle_captcha",
       "file_type": "code",
-      "norm_label": ".check_session_or_login()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L442"
+      "norm_label": ".check()",
+      "source_file": "browser/anti_captcha.py",
+      "source_location": "L18"
     },
     {
-      "id": "upwork_filter_jobfilter_check_url_exists",
-      "label": ".check_url_exists()",
+      "id": "browser_anti_captcha_anticloudflare_human_like_move",
+      "label": ".human_like_move()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
+      "community_name": "handle_captcha",
       "file_type": "code",
-      "norm_label": ".check_url_exists()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L91"
+      "norm_label": ".human_like_move()",
+      "source_file": "browser/anti_captcha.py",
+      "source_location": "L34"
     },
     {
-      "id": "upwork_filter_jobfilter_filter_1",
-      "label": ".filter_1()",
+      "id": "browser_anti_captcha_anticloudflare_init",
+      "label": ".__init__()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
+      "community_name": "handle_captcha",
       "file_type": "code",
-      "norm_label": ".filter_1()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L105"
+      "norm_label": ".__init__()",
+      "source_file": "browser/anti_captcha.py",
+      "source_location": "L14"
     },
     {
-      "id": "upwork_filter_jobfilter_filter_jobs",
-      "label": ".filter_jobs()",
+      "id": "browser_proxy_validation_get_proxy_ip",
+      "label": "get_proxy_ip()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
+      "community_name": "handle_captcha",
       "file_type": "code",
-      "norm_label": ".filter_jobs()",
+      "norm_label": "get_proxy_ip()",
+      "source_file": "browser/proxy_validation.py",
+      "source_location": "L8"
+    },
+    {
+      "id": "browser_proxy_validation_validate_proxy_ip",
+      "label": "validate_proxy_ip()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "validate_proxy_ip()",
+      "source_file": "browser/proxy_validation.py",
+      "source_location": "L32"
+    },
+    {
+      "id": "browser_utils_capture_sidebar_overlay_state",
+      "label": "_capture_sidebar_overlay_state()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "_capture_sidebar_overlay_state()",
+      "source_file": "browser/utils.py",
+      "source_location": "L110"
+    },
+    {
+      "id": "browser_utils_dismiss_cookies_popup",
+      "label": "dismiss_cookies_popup()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "dismiss_cookies_popup()",
+      "source_file": "browser/utils.py",
+      "source_location": "L145"
+    },
+    {
+      "id": "browser_utils_dismiss_fte_tour",
+      "label": "_dismiss_fte_tour()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "_dismiss_fte_tour()",
+      "source_file": "browser/utils.py",
+      "source_location": "L66"
+    },
+    {
+      "id": "browser_utils_dismiss_sidebar_overlay",
+      "label": "dismiss_sidebar_overlay()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "dismiss_sidebar_overlay()",
+      "source_file": "browser/utils.py",
+      "source_location": "L19"
+    },
+    {
+      "id": "browser_utils_handle_captcha",
+      "label": "handle_captcha()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "handle_captcha()",
+      "source_file": "browser/utils.py",
+      "source_location": "L172"
+    },
+    {
+      "id": "upwork_apply_upworkjobapplication_fetch_page",
+      "label": "._fetch_page()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "._fetch_page()",
+      "source_file": "upwork/apply.py",
+      "source_location": "L34"
+    },
+    {
+      "id": "upwork_filter_jobfilter_fetch_page",
+      "label": "._fetch_page()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "._fetch_page()",
       "source_file": "upwork/filter.py",
-      "source_location": "L454"
+      "source_location": "L67"
+    },
+    {
+      "id": "upwork_scraper_jobscraper_fetch_page",
+      "label": "._fetch_page()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "._fetch_page()",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L38"
     },
     {
       "id": "config_settings_build_settings",
@@ -935,54 +935,6 @@
       "source_location": "L24"
     },
     {
-      "id": "main_2_fetch_history_job",
-      "label": "fetch_history_job()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "fetch_history_job()",
-      "source_file": "main_2.py",
-      "source_location": "L770"
-    },
-    {
-      "id": "upwork_parser_jobhtmlparser_parse_invitation_table",
-      "label": ".parse_invitation_table()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": ".parse_invitation_table()",
-      "source_file": "upwork/parser.py",
-      "source_location": "L30"
-    },
-    {
-      "id": "upwork_parser_jobhtmlparser_parse_proposal_page",
-      "label": ".parse_proposal_page()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": ".parse_proposal_page()",
-      "source_file": "upwork/parser.py",
-      "source_location": "L34"
-    },
-    {
-      "id": "upwork_parsers_attachment_parser_attachmentparser_parse",
-      "label": ".parse()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": ".parse()",
-      "source_file": "upwork/parsers/attachment_parser.py",
-      "source_location": "L9"
-    },
-    {
       "id": "upwork_parsers_history_parser_clienthistoryparser_extract_activity",
       "label": ".extract_activity()",
       "_callable": true,
@@ -1053,30 +1005,6 @@
       "norm_label": "._row_freelancer()",
       "source_file": "upwork/parsers/history_parser.py",
       "source_location": "L16"
-    },
-    {
-      "id": "upwork_parsers_invitation_parser_invitationparser_parse",
-      "label": ".parse()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": ".parse()",
-      "source_file": "upwork/parsers/invitation_parser.py",
-      "source_location": "L10"
-    },
-    {
-      "id": "upwork_parsers_proposals_parser_proposalsparser_parse",
-      "label": ".parse()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": ".parse()",
-      "source_file": "upwork/parsers/proposals_parser.py",
-      "source_location": "L12"
     },
     {
       "id": "upwork_filters_filter_1_filter1_check_url_exists",
@@ -1163,40 +1091,28 @@
       "source_location": "L24"
     },
     {
-      "id": "upwork_filters_utils_save_url",
-      "label": "save_url()",
+      "id": "upwork_parser_jobhtmlparser_parse_proposal_page",
+      "label": ".parse_proposal_page()",
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "save_url",
+      "community_name": "proposals_parser.py",
       "file_type": "code",
-      "norm_label": "save_url()",
-      "source_file": "upwork/filters/utils.py",
-      "source_location": "L8"
+      "norm_label": ".parse_proposal_page()",
+      "source_file": "upwork/parser.py",
+      "source_location": "L34"
     },
     {
-      "id": "main_2_apply_filter_1",
-      "label": "apply_filter_1()",
+      "id": "upwork_parsers_proposals_parser_proposalsparser_parse",
+      "label": ".parse()",
       "_callable": true,
       "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
+      "community": 17,
+      "community_name": "proposals_parser.py",
       "file_type": "code",
-      "norm_label": "apply_filter_1()",
-      "source_file": "main_2.py",
-      "source_location": "L501"
-    },
-    {
-      "id": "main_2_apply_filter_2",
-      "label": "apply_filter_2()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "apply_filter_2()",
-      "source_file": "main_2.py",
-      "source_location": "L539"
+      "norm_label": ".parse()",
+      "source_file": "upwork/parsers/proposals_parser.py",
+      "source_location": "L12"
     },
     {
       "id": "main_2_assign_accounts",
@@ -1235,18 +1151,6 @@
       "source_location": "L342"
     },
     {
-      "id": "main_2_expand_client_history",
-      "label": "expand_client_history()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "expand_client_history()",
-      "source_file": "main_2.py",
-      "source_location": "L732"
-    },
-    {
       "id": "main_2_extract_job_id_from_url",
       "label": "extract_job_id_from_url()",
       "_callable": true,
@@ -1269,30 +1173,6 @@
       "norm_label": "fetch_notifications()",
       "source_file": "main_2.py",
       "source_location": "L209"
-    },
-    {
-      "id": "main_2_fetch_page",
-      "label": "_fetch_page()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "_fetch_page()",
-      "source_file": "main_2.py",
-      "source_location": "L354"
-    },
-    {
-      "id": "main_2_filter_jobs",
-      "label": "filter_jobs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "filter_jobs()",
-      "source_file": "main_2.py",
-      "source_location": "L632"
     },
     {
       "id": "main_2_get_existing_sheet_job_ids",
@@ -1319,18 +1199,6 @@
       "source_location": "L165"
     },
     {
-      "id": "main_2_is_low_funnel",
-      "label": "_is_low_funnel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "_is_low_funnel()",
-      "source_file": "main_2.py",
-      "source_location": "L783"
-    },
-    {
       "id": "main_2_main",
       "label": "main()",
       "_callable": true,
@@ -1355,42 +1223,6 @@
       "source_location": "L674"
     },
     {
-      "id": "main_2_parse_job_detail_html",
-      "label": "parse_job_detail_html()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "parse_job_detail_html()",
-      "source_file": "main_2.py",
-      "source_location": "L45"
-    },
-    {
-      "id": "main_2_scrape_client_history_for_jobs",
-      "label": "scrape_client_history_for_jobs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "scrape_client_history_for_jobs()",
-      "source_file": "main_2.py",
-      "source_location": "L803"
-    },
-    {
-      "id": "main_2_scrape_job_page",
-      "label": "scrape_job_page()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "scrape_job_page()",
-      "source_file": "main_2.py",
-      "source_location": "L372"
-    },
-    {
       "id": "main_2_scrape_new_jobs",
       "label": "scrape_new_jobs()",
       "_callable": true,
@@ -1401,18 +1233,6 @@
       "norm_label": "scrape_new_jobs()",
       "source_file": "main_2.py",
       "source_location": "L437"
-    },
-    {
-      "id": "utils_job_notification_service_send_jobs_for_review",
-      "label": "send_jobs_for_review()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "send_jobs_for_review()",
-      "source_file": "utils/job_notification_service.py",
-      "source_location": "L55"
     },
     {
       "id": "send_report_get_daily_report",
@@ -1571,6 +1391,18 @@
       "source_location": "L13"
     },
     {
+      "id": "utils_job_notification_service_send_jobs_for_review",
+      "label": "send_jobs_for_review()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "utils/__init__.py",
+      "file_type": "code",
+      "norm_label": "send_jobs_for_review()",
+      "source_file": "utils/job_notification_service.py",
+      "source_location": "L55"
+    },
+    {
       "id": "utils_ml_filter_build_ml_payload",
       "label": "build_ml_payload()",
       "_callable": true,
@@ -1643,76 +1475,64 @@
       "source_location": "L50"
     },
     {
-      "id": "upwork_filter_jobfilter_filter_2",
-      "label": ".filter_2()",
+      "id": "main_2_apply_filter_1",
+      "label": "apply_filter_1()",
       "_callable": true,
       "_origin": "ast",
       "community": 23,
-      "community_name": "JobHtmlParser",
+      "community_name": "filter_jobs",
       "file_type": "code",
-      "norm_label": ".filter_2()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L254"
+      "norm_label": "apply_filter_1()",
+      "source_file": "main_2.py",
+      "source_location": "L501"
     },
     {
-      "id": "upwork_filter_jobfilter_filter_client_data",
-      "label": ".filter_client_data()",
+      "id": "main_2_apply_filter_2",
+      "label": "apply_filter_2()",
       "_callable": true,
       "_origin": "ast",
       "community": 23,
-      "community_name": "JobHtmlParser",
+      "community_name": "filter_jobs",
       "file_type": "code",
-      "norm_label": ".filter_client_data()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L166"
+      "norm_label": "apply_filter_2()",
+      "source_file": "main_2.py",
+      "source_location": "L539"
     },
     {
-      "id": "upwork_parser_jobhtmlparser_parse_activity",
-      "label": ".parse_activity()",
+      "id": "main_2_filter_jobs",
+      "label": "filter_jobs()",
       "_callable": true,
       "_origin": "ast",
       "community": 23,
-      "community_name": "JobHtmlParser",
+      "community_name": "filter_jobs",
       "file_type": "code",
-      "norm_label": ".parse_activity()",
-      "source_file": "upwork/parser.py",
-      "source_location": "L18"
+      "norm_label": "filter_jobs()",
+      "source_file": "main_2.py",
+      "source_location": "L632"
     },
     {
-      "id": "upwork_parser_jobhtmlparser_parse_attachments",
-      "label": ".parse_attachments()",
+      "id": "browser_context_contexthandler_create",
+      "label": ".create()",
       "_callable": true,
       "_origin": "ast",
-      "community": 23,
-      "community_name": "JobHtmlParser",
+      "community": 24,
+      "community_name": "main.py",
       "file_type": "code",
-      "norm_label": ".parse_attachments()",
-      "source_file": "upwork/parser.py",
+      "norm_label": ".create()",
+      "source_file": "browser/context.py",
+      "source_location": "L13"
+    },
+    {
+      "id": "browser_context_contexthandler_destroy",
+      "label": ".destroy()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".destroy()",
+      "source_file": "browser/context.py",
       "source_location": "L26"
-    },
-    {
-      "id": "upwork_parser_jobhtmlparser_parse_client_info",
-      "label": ".parse_client_info()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "JobHtmlParser",
-      "file_type": "code",
-      "norm_label": ".parse_client_info()",
-      "source_file": "upwork/parser.py",
-      "source_location": "L22"
-    },
-    {
-      "id": "utils_job_stats_save_url",
-      "label": "save_url()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "JobHtmlParser",
-      "file_type": "code",
-      "norm_label": "save_url()",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L14"
     },
     {
       "id": "main_attempt_job_application",
@@ -1787,6 +1607,210 @@
       "source_location": "L178"
     },
     {
+      "id": "main_scrape_and_filter_jobs",
+      "label": "scrape_and_filter_jobs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "scrape_and_filter_jobs()",
+      "source_file": "main.py",
+      "source_location": "L276"
+    },
+    {
+      "id": "upwork_filter_jobfilter_apply_filter",
+      "label": ".apply_filter()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".apply_filter()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L434"
+    },
+    {
+      "id": "upwork_filter_jobfilter_check_session_or_login",
+      "label": ".check_session_or_login()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".check_session_or_login()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L442"
+    },
+    {
+      "id": "upwork_filter_jobfilter_check_url_exists",
+      "label": ".check_url_exists()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".check_url_exists()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L91"
+    },
+    {
+      "id": "upwork_filter_jobfilter_filter_1",
+      "label": ".filter_1()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".filter_1()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L105"
+    },
+    {
+      "id": "upwork_filter_jobfilter_filter_2",
+      "label": ".filter_2()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".filter_2()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L254"
+    },
+    {
+      "id": "upwork_filter_jobfilter_filter_client_data",
+      "label": ".filter_client_data()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".filter_client_data()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L166"
+    },
+    {
+      "id": "upwork_filter_jobfilter_filter_jobs",
+      "label": ".filter_jobs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".filter_jobs()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L454"
+    },
+    {
+      "id": "upwork_filter_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "upwork/filter.py",
+      "source_location": "L529"
+    },
+    {
+      "id": "upwork_parser_jobhtmlparser_parse_activity",
+      "label": ".parse_activity()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".parse_activity()",
+      "source_file": "upwork/parser.py",
+      "source_location": "L18"
+    },
+    {
+      "id": "upwork_parser_jobhtmlparser_parse_attachments",
+      "label": ".parse_attachments()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".parse_attachments()",
+      "source_file": "upwork/parser.py",
+      "source_location": "L26"
+    },
+    {
+      "id": "upwork_parser_jobhtmlparser_parse_client_info",
+      "label": ".parse_client_info()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".parse_client_info()",
+      "source_file": "upwork/parser.py",
+      "source_location": "L22"
+    },
+    {
+      "id": "upwork_parser_jobhtmlparser_parse_job_card",
+      "label": ".parse_job_card()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".parse_job_card()",
+      "source_file": "upwork/parser.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "upwork_scraper_jobscraper_init",
+      "label": ".__init__()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".__init__()",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L23"
+    },
+    {
+      "id": "upwork_scraper_jobscraper_save_to_json",
+      "label": ".save_to_json()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".save_to_json()",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L27"
+    },
+    {
+      "id": "upwork_scraper_jobscraper_scrape_jobs",
+      "label": ".scrape_jobs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": ".scrape_jobs()",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L64"
+    },
+    {
+      "id": "utils_job_stats_merge_counters",
+      "label": "merge_counters()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "merge_counters()",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L69"
+    },
+    {
       "id": "utils_job_stats_save_job_apply_stats",
       "label": "save_job_apply_stats()",
       "_callable": true,
@@ -1797,6 +1821,42 @@
       "norm_label": "save_job_apply_stats()",
       "source_file": "utils/job_stats.py",
       "source_location": "L36"
+    },
+    {
+      "id": "utils_job_stats_save_job_filter_stats",
+      "label": "save_job_filter_stats()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "save_job_filter_stats()",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L101"
+    },
+    {
+      "id": "utils_job_stats_save_scraped_jobs",
+      "label": "save_scraped_jobs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "save_scraped_jobs()",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L141"
+    },
+    {
+      "id": "utils_job_stats_save_url",
+      "label": "save_url()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "save_url()",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L14"
     },
     {
       "id": "utils_job_stats_update_job_in_sheet",
@@ -1823,87 +1883,63 @@
       "source_location": "L33"
     },
     {
-      "id": "utils_job_stats_deduplicate_scraped_jobs",
-      "label": "deduplicate_scraped_jobs()",
+      "id": "main_2_parse_job_detail_html",
+      "label": "parse_job_detail_html()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "job_stats.py",
+      "community_name": "scrape_job_page",
       "file_type": "code",
-      "norm_label": "deduplicate_scraped_jobs()",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L175"
+      "norm_label": "parse_job_detail_html()",
+      "source_file": "main_2.py",
+      "source_location": "L45"
     },
     {
-      "id": "utils_job_stats_merge_counters",
-      "label": "merge_counters()",
+      "id": "main_2_scrape_job_page",
+      "label": "scrape_job_page()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "job_stats.py",
+      "community_name": "scrape_job_page",
       "file_type": "code",
-      "norm_label": "merge_counters()",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L69"
+      "norm_label": "scrape_job_page()",
+      "source_file": "main_2.py",
+      "source_location": "L372"
     },
     {
-      "id": "utils_job_stats_save_job_filter_stats",
-      "label": "save_job_filter_stats()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "job_stats.py",
-      "file_type": "code",
-      "norm_label": "save_job_filter_stats()",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L101"
-    },
-    {
-      "id": "utils_job_stats_save_jobs_to_sheet",
-      "label": "save_jobs_to_sheet()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "job_stats.py",
-      "file_type": "code",
-      "norm_label": "save_jobs_to_sheet()",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L193"
-    },
-    {
-      "id": "config_paths_pathconfig_create_directories",
-      "label": "._create_directories()",
+      "id": "upwork_parser_jobhtmlparser_parse_invitation_table",
+      "label": ".parse_invitation_table()",
       "_callable": true,
       "_origin": "ast",
       "community": 26,
-      "community_name": "PathConfig",
+      "community_name": "invitation_parser.py",
       "file_type": "code",
-      "norm_label": "._create_directories()",
-      "source_file": "config/paths.py",
-      "source_location": "L36"
+      "norm_label": ".parse_invitation_table()",
+      "source_file": "upwork/parser.py",
+      "source_location": "L30"
     },
     {
-      "id": "config_paths_pathconfig_create_files",
-      "label": "._create_files()",
+      "id": "upwork_parsers_invitation_parser_invitationparser_parse",
+      "label": ".parse()",
       "_callable": true,
       "_origin": "ast",
       "community": 26,
-      "community_name": "PathConfig",
+      "community_name": "invitation_parser.py",
       "file_type": "code",
-      "norm_label": "._create_files()",
-      "source_file": "config/paths.py",
-      "source_location": "L56"
+      "norm_label": ".parse()",
+      "source_file": "upwork/parsers/invitation_parser.py",
+      "source_location": "L10"
     },
     {
-      "id": "config_paths_pathconfig_init",
-      "label": ".__init__()",
+      "id": "upwork_parsers_attachment_parser_attachmentparser_parse",
+      "label": ".parse()",
       "_callable": true,
       "_origin": "ast",
-      "community": 26,
-      "community_name": "PathConfig",
+      "community": 27,
+      "community_name": ".parse",
       "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "config/paths.py",
+      "norm_label": ".parse()",
+      "source_file": "upwork/parsers/attachment_parser.py",
       "source_location": "L9"
     },
     {
@@ -1953,18 +1989,6 @@
       "norm_label": ".extract_job_details()",
       "source_file": "upwork/apply.py",
       "source_location": "L142"
-    },
-    {
-      "id": "upwork_apply_upworkjobapplication_fetch_page",
-      "label": "._fetch_page()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "UpworkJobApplication",
-      "file_type": "code",
-      "norm_label": "._fetch_page()",
-      "source_file": "upwork/apply.py",
-      "source_location": "L34"
     },
     {
       "id": "upwork_apply_upworkjobapplication_fill_answers",
@@ -2171,78 +2195,6 @@
       "source_location": "L225"
     },
     {
-      "id": "browser_context_contexthandler_create",
-      "label": ".create()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": ".create()",
-      "source_file": "browser/context.py",
-      "source_location": "L10"
-    },
-    {
-      "id": "browser_context_contexthandler_destroy",
-      "label": ".destroy()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": ".destroy()",
-      "source_file": "browser/context.py",
-      "source_location": "L21"
-    },
-    {
-      "id": "browser_context_contexthandler_init",
-      "label": ".__init__()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "browser/context.py",
-      "source_location": "L5"
-    },
-    {
-      "id": "main_scrape_and_filter_jobs",
-      "label": "scrape_and_filter_jobs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": "scrape_and_filter_jobs()",
-      "source_file": "main.py",
-      "source_location": "L276"
-    },
-    {
-      "id": "upwork_filter_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "upwork/filter.py",
-      "source_location": "L529"
-    },
-    {
-      "id": "upwork_scraper_jobscraper_init",
-      "label": ".__init__()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L23"
-    },
-    {
       "id": "track_job_activity_collect_activity_records",
       "label": "collect_activity_records()",
       "_callable": true,
@@ -2289,6 +2241,18 @@
       "norm_label": "open_page_with_retry()",
       "source_file": "track_job_activity.py",
       "source_location": "L28"
+    },
+    {
+      "id": "browser_context_contexthandler_init",
+      "label": ".__init__()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "google_service.py",
+      "file_type": "code",
+      "norm_label": ".__init__()",
+      "source_file": "browser/context.py",
+      "source_location": "L8"
     },
     {
       "id": "services_google_service_batch_append_jobs",
@@ -2493,6 +2457,30 @@
       "norm_label": "run_job_activity_tracking()",
       "source_file": "track_job_activity.py",
       "source_location": "L125"
+    },
+    {
+      "id": "utils_job_stats_deduplicate_scraped_jobs",
+      "label": "deduplicate_scraped_jobs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "google_service.py",
+      "file_type": "code",
+      "norm_label": "deduplicate_scraped_jobs()",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L175"
+    },
+    {
+      "id": "utils_job_stats_save_jobs_to_sheet",
+      "label": "save_jobs_to_sheet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "google_service.py",
+      "file_type": "code",
+      "norm_label": "save_jobs_to_sheet()",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L193"
     },
     {
       "id": "upwork_parsers_activity_parser_activityparser_parse",
@@ -2759,52 +2747,64 @@
       "source_location": "L20"
     },
     {
-      "id": "upwork_parser_jobhtmlparser_parse_job_card",
-      "label": ".parse_job_card()",
+      "id": "main_2_expand_client_history",
+      "label": "expand_client_history()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
+      "community_name": "scrape_client_history_for_jobs",
       "file_type": "code",
-      "norm_label": ".parse_job_card()",
-      "source_file": "upwork/parser.py",
-      "source_location": "L14"
+      "norm_label": "expand_client_history()",
+      "source_file": "main_2.py",
+      "source_location": "L732"
     },
     {
-      "id": "upwork_scraper_jobscraper_save_to_json",
-      "label": ".save_to_json()",
+      "id": "main_2_fetch_history_job",
+      "label": "fetch_history_job()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
+      "community_name": "scrape_client_history_for_jobs",
       "file_type": "code",
-      "norm_label": ".save_to_json()",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L27"
+      "norm_label": "fetch_history_job()",
+      "source_file": "main_2.py",
+      "source_location": "L770"
     },
     {
-      "id": "upwork_scraper_jobscraper_scrape_jobs",
-      "label": ".scrape_jobs()",
+      "id": "main_2_fetch_page",
+      "label": "_fetch_page()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
+      "community_name": "scrape_client_history_for_jobs",
       "file_type": "code",
-      "norm_label": ".scrape_jobs()",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L64"
+      "norm_label": "_fetch_page()",
+      "source_file": "main_2.py",
+      "source_location": "L354"
     },
     {
-      "id": "utils_job_stats_save_scraped_jobs",
-      "label": "save_scraped_jobs()",
+      "id": "main_2_is_low_funnel",
+      "label": "_is_low_funnel()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
+      "community_name": "scrape_client_history_for_jobs",
       "file_type": "code",
-      "norm_label": "save_scraped_jobs()",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L141"
+      "norm_label": "_is_low_funnel()",
+      "source_file": "main_2.py",
+      "source_location": "L783"
+    },
+    {
+      "id": "main_2_scrape_client_history_for_jobs",
+      "label": "scrape_client_history_for_jobs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "scrape_client_history_for_jobs",
+      "file_type": "code",
+      "norm_label": "scrape_client_history_for_jobs()",
+      "source_file": "main_2.py",
+      "source_location": "L803"
     },
     {
       "id": "browser",
@@ -2818,17 +2818,6 @@
       "source_location": ""
     },
     {
-      "id": "browser_anti_captcha",
-      "label": "anti_captcha.py",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "anti_captcha.py",
-      "source_file": "browser/anti_captcha.py",
-      "source_location": "L1"
-    },
-    {
       "id": "browser_context",
       "label": "context.py",
       "_origin": "ast",
@@ -2837,17 +2826,6 @@
       "file_type": "code",
       "norm_label": "context.py",
       "source_file": "browser/context.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "browser_init",
-      "label": "browser/__init__.py",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "browser/__init__.py",
-      "source_file": "browser/__init__.py",
       "source_location": "L1"
     },
     {
@@ -2860,50 +2838,6 @@
       "norm_label": "manager.py",
       "source_file": "browser/manager.py",
       "source_location": "L1"
-    },
-    {
-      "id": "browser_proxy_validation",
-      "label": "proxy_validation.py",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "proxy_validation.py",
-      "source_file": "browser/proxy_validation.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "browser_proxy_validation_py_page",
-      "label": "Page",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "page",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "browser_utils",
-      "label": "browser/utils.py",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "browser/utils.py",
-      "source_file": "browser/utils.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "browser_utils_py_page",
-      "label": "Page",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "code",
-      "norm_label": "page",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "config_constants",
@@ -3016,6 +2950,28 @@
       "source_location": "L1"
     },
     {
+      "id": "upwork_filters_utils",
+      "label": "filters/utils.py",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "code",
+      "norm_label": "filters/utils.py",
+      "source_file": "upwork/filters/utils.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "upwork_filters_utils_py_path",
+      "label": "Path",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "upwork_parser",
       "label": "parser.py",
       "_origin": "ast",
@@ -3049,94 +3005,6 @@
       "source_location": "L1"
     },
     {
-      "id": "browser_anti_captcha_rationale_43",
-      "label": "Moves mouse from (x1, y1) to (x2, y2) using sinusoidal easing",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "moves mouse from (x1, y1) to (x2, y2) using sinusoidal easing",
-      "source_file": "browser/anti_captcha.py",
-      "source_location": "L43"
-    },
-    {
-      "id": "browser_proxy_validation_rationale_33",
-      "label": "Validates whether the current IP matches the expected proxy IP.",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "validates whether the current ip matches the expected proxy ip.",
-      "source_file": "browser/proxy_validation.py",
-      "source_location": "L33"
-    },
-    {
-      "id": "browser_proxy_validation_rationale_9",
-      "label": "Fetch the current public IP address as seen by the browser.",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "fetch the current public ip address as seen by the browser.",
-      "source_file": "browser/proxy_validation.py",
-      "source_location": "L9"
-    },
-    {
-      "id": "browser_utils_rationale_111",
-      "label": "Screenshot the page and log which sidebar panel is open, to identify what put\u2026",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "screenshot the page and log which sidebar panel is open, to identify what put...",
-      "source_file": "browser/utils.py",
-      "source_location": "L111"
-    },
-    {
-      "id": "browser_utils_rationale_146",
-      "label": "Dismiss the cookie consent popup on websites using OneTrust, if present.",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "dismiss the cookie consent popup on websites using onetrust, if present.",
-      "source_file": "browser/utils.py",
-      "source_location": "L146"
-    },
-    {
-      "id": "browser_utils_rationale_173",
-      "label": "Handle Captcha if present",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "handle captcha if present",
-      "source_file": "browser/utils.py",
-      "source_location": "L173"
-    },
-    {
-      "id": "browser_utils_rationale_20",
-      "label": "Clear the sidebar overlay that blocks clicks on the page. The overlay is raised\u2026",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "clear the sidebar overlay that blocks clicks on the page. the overlay is raised...",
-      "source_file": "browser/utils.py",
-      "source_location": "L20"
-    },
-    {
-      "id": "browser_utils_rationale_67",
-      "label": "Click through the first-time-experience navigation tour until it is gone. Each\u2026",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "click through the first-time-experience navigation tour until it is gone. each...",
-      "source_file": "browser/utils.py",
-      "source_location": "L67"
-    },
-    {
       "id": "config_logger_config_rationale_15",
       "label": "Configure the root logger with file and stream handlers.",
       "_origin": "ast",
@@ -3146,6 +3014,39 @@
       "norm_label": "configure the root logger with file and stream handlers.",
       "source_file": "config/logger_config.py",
       "source_location": "L15"
+    },
+    {
+      "id": "config_paths_rationale_37",
+      "label": "Ensure all required directories exist.",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "rationale",
+      "norm_label": "ensure all required directories exist.",
+      "source_file": "config/paths.py",
+      "source_location": "L37"
+    },
+    {
+      "id": "config_paths_rationale_5",
+      "label": "Configuration class for managing project directory paths.",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "rationale",
+      "norm_label": "configuration class for managing project directory paths.",
+      "source_file": "config/paths.py",
+      "source_location": "L5"
+    },
+    {
+      "id": "config_paths_rationale_57",
+      "label": "Ensure essential files exist.",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "track_job_activity.py",
+      "file_type": "rationale",
+      "norm_label": "ensure essential files exist.",
+      "source_file": "config/paths.py",
+      "source_location": "L57"
     },
     {
       "id": "refresh_cookies_rationale_1",
@@ -3159,26 +3060,15 @@
       "source_location": "L1"
     },
     {
-      "id": "upwork_filter_rationale_68",
-      "label": "Fetch page from the given URL with retry logic.",
+      "id": "upwork_filters_utils_rationale_9",
+      "label": "Save a job URL and optional reason for skipping to the file.",
       "_origin": "ast",
       "community": 0,
       "community_name": "track_job_activity.py",
       "file_type": "rationale",
-      "norm_label": "fetch page from the given url with retry logic.",
-      "source_file": "upwork/filter.py",
-      "source_location": "L68"
-    },
-    {
-      "id": "upwork_scraper_rationale_39",
-      "label": "Fetch HTML page source from the given URL with retry logic.",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "track_job_activity.py",
-      "file_type": "rationale",
-      "norm_label": "fetch html page source from the given url with retry logic.",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L39"
+      "norm_label": "save a job url and optional reason for skipping to the file.",
+      "source_file": "upwork/filters/utils.py",
+      "source_location": "L9"
     },
     {
       "id": "utils_proxy_rationale_12",
@@ -3192,70 +3082,191 @@
       "source_location": "L12"
     },
     {
-      "id": "upwork_filter_rationale_106",
-      "label": "Apply initial filtering rules: duplicates, low budget, keywords.",
+      "id": "browser_anti_captcha",
+      "label": "anti_captcha.py",
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
-      "file_type": "rationale",
-      "norm_label": "apply initial filtering rules: duplicates, low budget, keywords.",
-      "source_file": "upwork/filter.py",
-      "source_location": "L106"
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "anti_captcha.py",
+      "source_file": "browser/anti_captcha.py",
+      "source_location": "L1"
     },
     {
-      "id": "upwork_filter_rationale_25",
-      "label": "Handles filtering logic for Upwork job listings based on predefined rules",
+      "id": "browser_init",
+      "label": "browser/__init__.py",
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
-      "file_type": "rationale",
-      "norm_label": "handles filtering logic for upwork job listings based on predefined rules",
-      "source_file": "upwork/filter.py",
-      "source_location": "L25"
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "browser/__init__.py",
+      "source_file": "browser/__init__.py",
+      "source_location": "L1"
     },
     {
-      "id": "upwork_filter_rationale_435",
-      "label": "Apply both filters on a job entry.",
+      "id": "browser_proxy_validation",
+      "label": "proxy_validation.py",
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
-      "file_type": "rationale",
-      "norm_label": "apply both filters on a job entry.",
-      "source_file": "upwork/filter.py",
-      "source_location": "L435"
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "proxy_validation.py",
+      "source_file": "browser/proxy_validation.py",
+      "source_location": "L1"
     },
     {
-      "id": "upwork_filter_rationale_443",
-      "label": "Validate or login using cookies.",
+      "id": "browser_proxy_validation_py_page",
+      "label": "Page",
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
-      "file_type": "rationale",
-      "norm_label": "validate or login using cookies.",
-      "source_file": "upwork/filter.py",
-      "source_location": "L443"
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "page",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "upwork_filter_rationale_455",
-      "label": "Apply filtering on a list of job data.",
+      "id": "browser_utils",
+      "label": "browser/utils.py",
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
-      "file_type": "rationale",
-      "norm_label": "apply filtering on a list of job data.",
-      "source_file": "upwork/filter.py",
-      "source_location": "L455"
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "browser/utils.py",
+      "source_file": "browser/utils.py",
+      "source_location": "L1"
     },
     {
-      "id": "upwork_filter_rationale_92",
-      "label": "Check whether a job URL has already been processed.",
+      "id": "browser_utils_py_page",
+      "label": "Page",
       "_origin": "ast",
       "community": 1,
-      "community_name": "JobFilter",
+      "community_name": "handle_captcha",
+      "file_type": "code",
+      "norm_label": "page",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "browser_anti_captcha_rationale_43",
+      "label": "Moves mouse from (x1, y1) to (x2, y2) using sinusoidal easing",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
       "file_type": "rationale",
-      "norm_label": "check whether a job url has already been processed.",
+      "norm_label": "moves mouse from (x1, y1) to (x2, y2) using sinusoidal easing",
+      "source_file": "browser/anti_captcha.py",
+      "source_location": "L43"
+    },
+    {
+      "id": "browser_proxy_validation_rationale_33",
+      "label": "Validates whether the current IP matches the expected proxy IP.",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "validates whether the current ip matches the expected proxy ip.",
+      "source_file": "browser/proxy_validation.py",
+      "source_location": "L33"
+    },
+    {
+      "id": "browser_proxy_validation_rationale_9",
+      "label": "Fetch the current public IP address as seen by the browser.",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "fetch the current public ip address as seen by the browser.",
+      "source_file": "browser/proxy_validation.py",
+      "source_location": "L9"
+    },
+    {
+      "id": "browser_utils_rationale_111",
+      "label": "Screenshot the page and log which sidebar panel is open, to identify what put\u2026",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "screenshot the page and log which sidebar panel is open, to identify what put...",
+      "source_file": "browser/utils.py",
+      "source_location": "L111"
+    },
+    {
+      "id": "browser_utils_rationale_146",
+      "label": "Dismiss the cookie consent popup on websites using OneTrust, if present.",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "dismiss the cookie consent popup on websites using onetrust, if present.",
+      "source_file": "browser/utils.py",
+      "source_location": "L146"
+    },
+    {
+      "id": "browser_utils_rationale_173",
+      "label": "Handle Captcha if present",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "handle captcha if present",
+      "source_file": "browser/utils.py",
+      "source_location": "L173"
+    },
+    {
+      "id": "browser_utils_rationale_20",
+      "label": "Clear the sidebar overlay that blocks clicks on the page. The overlay is raised\u2026",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "clear the sidebar overlay that blocks clicks on the page. the overlay is raised...",
+      "source_file": "browser/utils.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "browser_utils_rationale_67",
+      "label": "Click through the first-time-experience navigation tour until it is gone. Each\u2026",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "click through the first-time-experience navigation tour until it is gone. each...",
+      "source_file": "browser/utils.py",
+      "source_location": "L67"
+    },
+    {
+      "id": "upwork_apply_rationale_35",
+      "label": "Fetch page from the given URL with retry logic.",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "fetch page from the given url with retry logic.",
+      "source_file": "upwork/apply.py",
+      "source_location": "L35"
+    },
+    {
+      "id": "upwork_filter_rationale_68",
+      "label": "Fetch page from the given URL with retry logic.",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "fetch page from the given url with retry logic.",
       "source_file": "upwork/filter.py",
-      "source_location": "L92"
+      "source_location": "L68"
+    },
+    {
+      "id": "upwork_scraper_rationale_39",
+      "label": "Fetch HTML page source from the given URL with retry logic.",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "handle_captcha",
+      "file_type": "rationale",
+      "norm_label": "fetch html page source from the given url with retry logic.",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L39"
     },
     {
       "id": "config_schema",
@@ -3467,17 +3478,6 @@
       "source_location": ""
     },
     {
-      "id": "upwork_parsers_attachment_parser",
-      "label": "attachment_parser.py",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "attachment_parser.py",
-      "source_file": "upwork/parsers/attachment_parser.py",
-      "source_location": "L1"
-    },
-    {
       "id": "upwork_parsers_history_parser",
       "label": "history_parser.py",
       "_origin": "ast",
@@ -3498,61 +3498,6 @@
       "norm_label": "parsers/__init__.py",
       "source_file": "upwork/parsers/__init__.py",
       "source_location": "L1"
-    },
-    {
-      "id": "upwork_parsers_invitation_parser",
-      "label": "invitation_parser.py",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "invitation_parser.py",
-      "source_file": "upwork/parsers/invitation_parser.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "upwork_parsers_proposals_parser",
-      "label": "proposals_parser.py",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "proposals_parser.py",
-      "source_file": "upwork/parsers/proposals_parser.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "upwork_selectors_proposals_page_selectors",
-      "label": "proposals_page_selectors.py",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "code",
-      "norm_label": "proposals_page_selectors.py",
-      "source_file": "upwork/selectors/proposals_page_selectors.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "main_2_rationale_771",
-      "label": "Open a history job's own page in `history_page` (a second tab) and return its\u2026",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "rationale",
-      "norm_label": "open a history job's own page in `history_page` (a second tab) and return its...",
-      "source_file": "main_2.py",
-      "source_location": "L771"
-    },
-    {
-      "id": "upwork_parsers_attachment_parser_rationale_10",
-      "label": "extracts all the attachments",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "rationale",
-      "norm_label": "extracts all the attachments",
-      "source_file": "upwork/parsers/attachment_parser.py",
-      "source_location": "L10"
     },
     {
       "id": "upwork_parsers_history_parser_rationale_109",
@@ -3619,17 +3564,6 @@
       "norm_label": "title / description / skills only, for a history job we don't need the full...",
       "source_file": "upwork/parsers/history_parser.py",
       "source_location": "L85"
-    },
-    {
-      "id": "upwork_parsers_proposals_parser_rationale_13",
-      "label": "Extracts active proposals data from HTML.",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "BeautifulSoup",
-      "file_type": "rationale",
-      "norm_label": "extracts active proposals data from html.",
-      "source_file": "upwork/parsers/proposals_parser.py",
-      "source_location": "L13"
     },
     {
       "id": "deploy",
@@ -3825,37 +3759,37 @@
       "source_location": ""
     },
     {
-      "id": "upwork_filters_utils",
-      "label": "filters/utils.py",
+      "id": "upwork_parsers_proposals_parser",
+      "label": "proposals_parser.py",
       "_origin": "ast",
       "community": 17,
-      "community_name": "save_url",
+      "community_name": "proposals_parser.py",
       "file_type": "code",
-      "norm_label": "filters/utils.py",
-      "source_file": "upwork/filters/utils.py",
+      "norm_label": "proposals_parser.py",
+      "source_file": "upwork/parsers/proposals_parser.py",
       "source_location": "L1"
     },
     {
-      "id": "upwork_filters_utils_py_path",
-      "label": "Path",
+      "id": "upwork_selectors_proposals_page_selectors",
+      "label": "proposals_page_selectors.py",
       "_origin": "ast",
       "community": 17,
-      "community_name": "save_url",
+      "community_name": "proposals_parser.py",
       "file_type": "code",
-      "norm_label": "path",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "proposals_page_selectors.py",
+      "source_file": "upwork/selectors/proposals_page_selectors.py",
+      "source_location": "L1"
     },
     {
-      "id": "upwork_filters_utils_rationale_9",
-      "label": "Save a job URL and optional reason for skipping to the file.",
+      "id": "upwork_parsers_proposals_parser_rationale_13",
+      "label": "Extracts active proposals data from HTML.",
       "_origin": "ast",
       "community": 17,
-      "community_name": "save_url",
+      "community_name": "proposals_parser.py",
       "file_type": "rationale",
-      "norm_label": "save a job url and optional reason for skipping to the file.",
-      "source_file": "upwork/filters/utils.py",
-      "source_location": "L9"
+      "norm_label": "extracts active proposals data from html.",
+      "source_file": "upwork/parsers/proposals_parser.py",
+      "source_location": "L13"
     },
     {
       "id": "main_2",
@@ -3867,17 +3801,6 @@
       "norm_label": "main_2.py",
       "source_file": "main_2.py",
       "source_location": "L1"
-    },
-    {
-      "id": "page",
-      "label": "Page",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "code",
-      "norm_label": "page",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "userconfig",
@@ -3957,28 +3880,6 @@
       "source_location": "L343"
     },
     {
-      "id": "main_2_rationale_355",
-      "label": "Navigate to URL with retry and captcha handling. Returns True on success.",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "navigate to url with retry and captcha handling. returns true on success.",
-      "source_file": "main_2.py",
-      "source_location": "L355"
-    },
-    {
-      "id": "main_2_rationale_373",
-      "label": "Navigate to one job detail page and extract all fields needed for filtering and\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "navigate to one job detail page and extract all fields needed for filtering and...",
-      "source_file": "main_2.py",
-      "source_location": "L373"
-    },
-    {
       "id": "main_2_rationale_440",
       "label": "Open worker browser, visit each notification URL not already in sheet, scrape\u2026",
       "_origin": "ast",
@@ -3988,50 +3889,6 @@
       "norm_label": "open worker browser, visit each notification url not already in sheet, scrape...",
       "source_file": "main_2.py",
       "source_location": "L440"
-    },
-    {
-      "id": "main_2_rationale_46",
-      "label": "Parse job-specific fields from the job listing detail page HTML. Selectors\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "parse job-specific fields from the job listing detail page html. selectors...",
-      "source_file": "main_2.py",
-      "source_location": "L46"
-    },
-    {
-      "id": "main_2_rationale_502",
-      "label": "Filter 1: budget < MIN_BUDGET, forbidden keywords. Dedup is already handled in\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "filter 1: budget < min_budget, forbidden keywords. dedup is already handled in...",
-      "source_file": "main_2.py",
-      "source_location": "L502"
-    },
-    {
-      "id": "main_2_rationale_540",
-      "label": "Filter 2: client data checks \u2014 total spent, hourly rate field, banned location,\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "filter 2: client data checks \u2014 total spent, hourly rate field, banned location,...",
-      "source_file": "main_2.py",
-      "source_location": "L540"
-    },
-    {
-      "id": "main_2_rationale_633",
-      "label": "Run Filter 1 and Filter 2 on scraped jobs. Queues sheet updates for filter\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "run filter 1 and filter 2 on scraped jobs. queues sheet updates for filter...",
-      "source_file": "main_2.py",
-      "source_location": "L633"
     },
     {
       "id": "main_2_rationale_675",
@@ -4045,39 +3902,6 @@
       "source_location": "L675"
     },
     {
-      "id": "main_2_rationale_733",
-      "label": "Click \"View more\" on the client-history panel until `max_clicks` history rows\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "click \"view more\" on the client-history panel until `max_clicks` history rows...",
-      "source_file": "main_2.py",
-      "source_location": "L733"
-    },
-    {
-      "id": "main_2_rationale_784",
-      "label": "True if a past job shows zero client engagement: no interviews, no invites.\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "true if a past job shows zero client engagement: no interviews, no invites....",
-      "source_file": "main_2.py",
-      "source_location": "L784"
-    },
-    {
-      "id": "main_2_rationale_804",
-      "label": "For each job (already ML-filter passed), open its page, expand the client-\u2026",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "for each job (already ml-filter passed), open its page, expand the client-...",
-      "source_file": "main_2.py",
-      "source_location": "L804"
-    },
-    {
       "id": "main_2_rationale_933",
       "label": "Stamp job[\"assigned_to\"] with the applicant account that should apply, based on\u2026",
       "_origin": "ast",
@@ -4087,17 +3911,6 @@
       "norm_label": "stamp job[\"assigned_to\"] with the applicant account that should apply, based on...",
       "source_file": "main_2.py",
       "source_location": "L933"
-    },
-    {
-      "id": "utils_job_notification_service_rationale_56",
-      "label": "Send the review email. Returns True if sent.",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "main_2.py",
-      "file_type": "rationale",
-      "norm_label": "send the review email. returns true if sent.",
-      "source_file": "utils/job_notification_service.py",
-      "source_location": "L56"
     },
     {
       "id": "cookies_check",
@@ -4309,6 +4122,17 @@
       "source_location": "L33"
     },
     {
+      "id": "utils_job_notification_service_rationale_56",
+      "label": "Send the review email. Returns True if sent.",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "utils/__init__.py",
+      "file_type": "rationale",
+      "norm_label": "send the review email. returns true if sent.",
+      "source_file": "utils/job_notification_service.py",
+      "source_location": "L56"
+    },
+    {
       "id": "utils_ml_filter_rationale_13",
       "label": "Build the ML API request payload \u2014 7 client-history signals only.",
       "_origin": "ast",
@@ -4397,37 +4221,37 @@
       "source_location": "L1"
     },
     {
-      "id": "upwork_filter_rationale_167",
-      "label": "Filter based on client data fields.",
+      "id": "main_2_rationale_502",
+      "label": "Filter 1: budget < MIN_BUDGET, forbidden keywords. Dedup is already handled in\u2026",
       "_origin": "ast",
       "community": 23,
-      "community_name": "JobHtmlParser",
+      "community_name": "filter_jobs",
       "file_type": "rationale",
-      "norm_label": "filter based on client data fields.",
-      "source_file": "upwork/filter.py",
-      "source_location": "L167"
+      "norm_label": "filter 1: budget < min_budget, forbidden keywords. dedup is already handled in...",
+      "source_file": "main_2.py",
+      "source_location": "L502"
     },
     {
-      "id": "upwork_filter_rationale_255",
-      "label": "Second layer of filtering using job detail page content.",
+      "id": "main_2_rationale_540",
+      "label": "Filter 2: client data checks \u2014 total spent, hourly rate field, banned location,\u2026",
       "_origin": "ast",
       "community": 23,
-      "community_name": "JobHtmlParser",
+      "community_name": "filter_jobs",
       "file_type": "rationale",
-      "norm_label": "second layer of filtering using job detail page content.",
-      "source_file": "upwork/filter.py",
-      "source_location": "L255"
+      "norm_label": "filter 2: client data checks \u2014 total spent, hourly rate field, banned location,...",
+      "source_file": "main_2.py",
+      "source_location": "L540"
     },
     {
-      "id": "utils_job_stats_rationale_15",
-      "label": "Save a job URL and optional reason for skipping to the file.",
+      "id": "main_2_rationale_633",
+      "label": "Run Filter 1 and Filter 2 on scraped jobs. Queues sheet updates for filter\u2026",
       "_origin": "ast",
       "community": 23,
-      "community_name": "JobHtmlParser",
+      "community_name": "filter_jobs",
       "file_type": "rationale",
-      "norm_label": "save a job url and optional reason for skipping to the file.",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L15"
+      "norm_label": "run filter 1 and filter 2 on scraped jobs. queues sheet updates for filter...",
+      "source_file": "main_2.py",
+      "source_location": "L633"
     },
     {
       "id": "main",
@@ -4439,6 +4263,61 @@
       "norm_label": "main.py",
       "source_file": "main.py",
       "source_location": "L1"
+    },
+    {
+      "id": "upwork_filter",
+      "label": "filter.py",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "filter.py",
+      "source_file": "upwork/filter.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "upwork_parser_py_tag",
+      "label": "Tag",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "tag",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "upwork_scraper_py_page",
+      "label": "Page",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "page",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "utils_job_stats",
+      "label": "job_stats.py",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "job_stats.py",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "utils_job_stats_py_path",
+      "label": "Path",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "main_rationale_179",
@@ -4474,6 +4353,17 @@
       "source_location": "L22"
     },
     {
+      "id": "main_rationale_277",
+      "label": "Scrape and filter jobs from Upwork using the default or given user.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "scrape and filter jobs from upwork using the default or given user.",
+      "source_file": "main.py",
+      "source_location": "L277"
+    },
+    {
       "id": "main_rationale_323",
       "label": "Main function to execute the Upwork automation workflow: - Scrapes jobs -\u2026",
       "_origin": "ast",
@@ -4494,6 +4384,149 @@
       "norm_label": "extracts the job id from the upwork job link.",
       "source_file": "main.py",
       "source_location": "L84"
+    },
+    {
+      "id": "upwork_filter_rationale_106",
+      "label": "Apply initial filtering rules: duplicates, low budget, keywords.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "apply initial filtering rules: duplicates, low budget, keywords.",
+      "source_file": "upwork/filter.py",
+      "source_location": "L106"
+    },
+    {
+      "id": "upwork_filter_rationale_167",
+      "label": "Filter based on client data fields.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "filter based on client data fields.",
+      "source_file": "upwork/filter.py",
+      "source_location": "L167"
+    },
+    {
+      "id": "upwork_filter_rationale_25",
+      "label": "Handles filtering logic for Upwork job listings based on predefined rules",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "handles filtering logic for upwork job listings based on predefined rules",
+      "source_file": "upwork/filter.py",
+      "source_location": "L25"
+    },
+    {
+      "id": "upwork_filter_rationale_255",
+      "label": "Second layer of filtering using job detail page content.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "second layer of filtering using job detail page content.",
+      "source_file": "upwork/filter.py",
+      "source_location": "L255"
+    },
+    {
+      "id": "upwork_filter_rationale_435",
+      "label": "Apply both filters on a job entry.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "apply both filters on a job entry.",
+      "source_file": "upwork/filter.py",
+      "source_location": "L435"
+    },
+    {
+      "id": "upwork_filter_rationale_443",
+      "label": "Validate or login using cookies.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "validate or login using cookies.",
+      "source_file": "upwork/filter.py",
+      "source_location": "L443"
+    },
+    {
+      "id": "upwork_filter_rationale_455",
+      "label": "Apply filtering on a list of job data.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "apply filtering on a list of job data.",
+      "source_file": "upwork/filter.py",
+      "source_location": "L455"
+    },
+    {
+      "id": "upwork_filter_rationale_92",
+      "label": "Check whether a job URL has already been processed.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "check whether a job url has already been processed.",
+      "source_file": "upwork/filter.py",
+      "source_location": "L92"
+    },
+    {
+      "id": "upwork_scraper_rationale_21",
+      "label": "A scraper class to extract job listings from Upwork.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "a scraper class to extract job listings from upwork.",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L21"
+    },
+    {
+      "id": "upwork_scraper_rationale_24",
+      "label": "Initialize with a SeleniumBase browser instance.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "initialize with a seleniumbase browser instance.",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L24"
+    },
+    {
+      "id": "upwork_scraper_rationale_28",
+      "label": "Save scraped data to a JSON file.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "save scraped data to a json file.",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L28"
+    },
+    {
+      "id": "upwork_scraper_rationale_65",
+      "label": "Scrape job listings from the given URL or default Upwork job URL.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "scrape job listings from the given url or default upwork job url.",
+      "source_file": "upwork/scraper.py",
+      "source_location": "L65"
+    },
+    {
+      "id": "utils_job_stats_rationale_15",
+      "label": "Save a job URL and optional reason for skipping to the file.",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "save a job url and optional reason for skipping to the file.",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L15"
     },
     {
       "id": "utils_job_stats_rationale_213",
@@ -4518,6 +4551,17 @@
       "source_location": "L37"
     },
     {
+      "id": "utils_job_stats_rationale_70",
+      "label": "Recursively merge two dicts d1 and d2 that have the same structure. Wherever\u2026",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "main.py",
+      "file_type": "rationale",
+      "norm_label": "recursively merge two dicts d1 and d2 that have the same structure. wherever...",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L70"
+    },
+    {
       "id": "utils_ml_filter_rationale_34",
       "label": "Convert a 0-1 probability float to a percentage string e.g. 0.87 \u2192 '87%'.",
       "_origin": "ast",
@@ -4529,81 +4573,59 @@
       "source_location": "L34"
     },
     {
-      "id": "utils_job_stats",
-      "label": "job_stats.py",
+      "id": "main_2_rationale_373",
+      "label": "Navigate to one job detail page and extract all fields needed for filtering and\u2026",
       "_origin": "ast",
       "community": 25,
-      "community_name": "job_stats.py",
+      "community_name": "scrape_job_page",
+      "file_type": "rationale",
+      "norm_label": "navigate to one job detail page and extract all fields needed for filtering and...",
+      "source_file": "main_2.py",
+      "source_location": "L373"
+    },
+    {
+      "id": "main_2_rationale_46",
+      "label": "Parse job-specific fields from the job listing detail page HTML. Selectors\u2026",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "scrape_job_page",
+      "file_type": "rationale",
+      "norm_label": "parse job-specific fields from the job listing detail page html. selectors...",
+      "source_file": "main_2.py",
+      "source_location": "L46"
+    },
+    {
+      "id": "upwork_parsers_invitation_parser",
+      "label": "invitation_parser.py",
+      "_origin": "ast",
+      "community": 26,
+      "community_name": "invitation_parser.py",
       "file_type": "code",
-      "norm_label": "job_stats.py",
-      "source_file": "utils/job_stats.py",
+      "norm_label": "invitation_parser.py",
+      "source_file": "upwork/parsers/invitation_parser.py",
       "source_location": "L1"
     },
     {
-      "id": "utils_job_stats_rationale_176",
-      "label": "Deduplicate scraped jobs based on job link.",
+      "id": "upwork_parsers_attachment_parser",
+      "label": "attachment_parser.py",
       "_origin": "ast",
-      "community": 25,
-      "community_name": "job_stats.py",
-      "file_type": "rationale",
-      "norm_label": "deduplicate scraped jobs based on job link.",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L176"
+      "community": 27,
+      "community_name": ".parse",
+      "file_type": "code",
+      "norm_label": "attachment_parser.py",
+      "source_file": "upwork/parsers/attachment_parser.py",
+      "source_location": "L1"
     },
     {
-      "id": "utils_job_stats_rationale_194",
-      "label": "Save scraped jobs data to Google Sheets",
+      "id": "upwork_parsers_attachment_parser_rationale_10",
+      "label": "extracts all the attachments",
       "_origin": "ast",
-      "community": 25,
-      "community_name": "job_stats.py",
+      "community": 27,
+      "community_name": ".parse",
       "file_type": "rationale",
-      "norm_label": "save scraped jobs data to google sheets",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L194"
-    },
-    {
-      "id": "utils_job_stats_rationale_70",
-      "label": "Recursively merge two dicts d1 and d2 that have the same structure. Wherever\u2026",
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "job_stats.py",
-      "file_type": "rationale",
-      "norm_label": "recursively merge two dicts d1 and d2 that have the same structure. wherever...",
-      "source_file": "utils/job_stats.py",
-      "source_location": "L70"
-    },
-    {
-      "id": "config_paths_rationale_37",
-      "label": "Ensure all required directories exist.",
-      "_origin": "ast",
-      "community": 26,
-      "community_name": "PathConfig",
-      "file_type": "rationale",
-      "norm_label": "ensure all required directories exist.",
-      "source_file": "config/paths.py",
-      "source_location": "L37"
-    },
-    {
-      "id": "config_paths_rationale_5",
-      "label": "Configuration class for managing project directory paths.",
-      "_origin": "ast",
-      "community": 26,
-      "community_name": "PathConfig",
-      "file_type": "rationale",
-      "norm_label": "configuration class for managing project directory paths.",
-      "source_file": "config/paths.py",
-      "source_location": "L5"
-    },
-    {
-      "id": "config_paths_rationale_57",
-      "label": "Ensure essential files exist.",
-      "_origin": "ast",
-      "community": 26,
-      "community_name": "PathConfig",
-      "file_type": "rationale",
-      "norm_label": "ensure essential files exist.",
-      "source_file": "config/paths.py",
-      "source_location": "L57"
+      "norm_label": "extracts all the attachments",
+      "source_file": "upwork/parsers/attachment_parser.py",
+      "source_location": "L10"
     },
     {
       "id": "upwork_filter_py_page",
@@ -4738,17 +4760,6 @@
       "source_location": "L302"
     },
     {
-      "id": "upwork_apply_rationale_35",
-      "label": "Fetch page from the given URL with retry logic.",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "UpworkJobApplication",
-      "file_type": "rationale",
-      "norm_label": "fetch page from the given url with retry logic.",
-      "source_file": "upwork/apply.py",
-      "source_location": "L35"
-    },
-    {
       "id": "upwork_apply_rationale_376",
       "label": "Fill out custom job questions with provided answers.",
       "_origin": "ast",
@@ -4874,66 +4885,11 @@
       "label": "Path",
       "_origin": "ast",
       "community": 31,
-      "community_name": "filter.py",
+      "community_name": "Path",
       "file_type": "code",
       "norm_label": "path",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "upwork_filter",
-      "label": "filter.py",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": "filter.py",
-      "source_file": "upwork/filter.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "upwork_scraper_py_page",
-      "label": "Page",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "code",
-      "norm_label": "page",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "main_rationale_277",
-      "label": "Scrape and filter jobs from Upwork using the default or given user.",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "rationale",
-      "norm_label": "scrape and filter jobs from upwork using the default or given user.",
-      "source_file": "main.py",
-      "source_location": "L277"
-    },
-    {
-      "id": "upwork_scraper_rationale_21",
-      "label": "A scraper class to extract job listings from Upwork.",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "rationale",
-      "norm_label": "a scraper class to extract job listings from upwork.",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L21"
-    },
-    {
-      "id": "upwork_scraper_rationale_24",
-      "label": "Initialize with a SeleniumBase browser instance.",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "filter.py",
-      "file_type": "rationale",
-      "norm_label": "initialize with a seleniumbase browser instance.",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L24"
     },
     {
       "id": "claude",
@@ -5299,6 +5255,28 @@
       "norm_label": "main workflow: 1. fetch applied jobs from sheet 2. login 3. scrape activity 4....",
       "source_file": "track_job_activity.py",
       "source_location": "L126"
+    },
+    {
+      "id": "utils_job_stats_rationale_176",
+      "label": "Deduplicate scraped jobs based on job link.",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "google_service.py",
+      "file_type": "rationale",
+      "norm_label": "deduplicate scraped jobs based on job link.",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L176"
+    },
+    {
+      "id": "utils_job_stats_rationale_194",
+      "label": "Save scraped jobs data to Google Sheets",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "google_service.py",
+      "file_type": "rationale",
+      "norm_label": "save scraped jobs data to google sheets",
+      "source_file": "utils/job_stats.py",
+      "source_location": "L194"
     },
     {
       "id": "upwork_parsers_activity_parser",
@@ -5675,48 +5653,70 @@
       "source_location": "L97"
     },
     {
-      "id": "upwork_parser_py_tag",
-      "label": "Tag",
+      "id": "page",
+      "label": "Page",
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
+      "community_name": "scrape_client_history_for_jobs",
       "file_type": "code",
-      "norm_label": "tag",
+      "norm_label": "page",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "utils_job_stats_py_path",
-      "label": "Path",
+      "id": "main_2_rationale_355",
+      "label": "Navigate to URL with retry and captcha handling. Returns True on success.",
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
-      "file_type": "code",
-      "norm_label": "path",
-      "source_file": "",
-      "source_location": ""
+      "community_name": "scrape_client_history_for_jobs",
+      "file_type": "rationale",
+      "norm_label": "navigate to url with retry and captcha handling. returns true on success.",
+      "source_file": "main_2.py",
+      "source_location": "L355"
     },
     {
-      "id": "upwork_scraper_rationale_28",
-      "label": "Save scraped data to a JSON file.",
+      "id": "main_2_rationale_733",
+      "label": "Click \"View more\" on the client-history panel until `max_clicks` history rows\u2026",
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
+      "community_name": "scrape_client_history_for_jobs",
       "file_type": "rationale",
-      "norm_label": "save scraped data to a json file.",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L28"
+      "norm_label": "click \"view more\" on the client-history panel until `max_clicks` history rows...",
+      "source_file": "main_2.py",
+      "source_location": "L733"
     },
     {
-      "id": "upwork_scraper_rationale_65",
-      "label": "Scrape job listings from the given URL or default Upwork job URL.",
+      "id": "main_2_rationale_771",
+      "label": "Open a history job's own page in `history_page` (a second tab) and return its\u2026",
       "_origin": "ast",
       "community": 9,
-      "community_name": ".scrape_jobs",
+      "community_name": "scrape_client_history_for_jobs",
       "file_type": "rationale",
-      "norm_label": "scrape job listings from the given url or default upwork job url.",
-      "source_file": "upwork/scraper.py",
-      "source_location": "L65"
+      "norm_label": "open a history job's own page in `history_page` (a second tab) and return its...",
+      "source_file": "main_2.py",
+      "source_location": "L771"
+    },
+    {
+      "id": "main_2_rationale_784",
+      "label": "True if a past job shows zero client engagement: no interviews, no invites.\u2026",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "scrape_client_history_for_jobs",
+      "file_type": "rationale",
+      "norm_label": "true if a past job shows zero client engagement: no interviews, no invites....",
+      "source_file": "main_2.py",
+      "source_location": "L784"
+    },
+    {
+      "id": "main_2_rationale_804",
+      "label": "For each job (already ML-filter passed), open its page, expand the client-\u2026",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "scrape_client_history_for_jobs",
+      "file_type": "rationale",
+      "norm_label": "for each job (already ml-filter passed), open its page, expand the client-...",
+      "source_file": "main_2.py",
+      "source_location": "L804"
     }
   ],
   "links": [
@@ -5753,7 +5753,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "browser/anti_captcha.py",
-      "source_location": "L91",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -12005,19 +12005,19 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "browser/context.py",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
       "source": "browser_context_contexthandler_init",
-      "target": "browser_context_py_path",
+      "target": "path",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "browser/context.py",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -12960,7 +12960,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "browser/context.py",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -14764,7 +14764,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "browser/context.py",
-      "source_location": "L10",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -14775,7 +14775,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "browser/context.py",
-      "source_location": "L21",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -14786,7 +14786,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "browser/context.py",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -17706,5 +17706,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "451659ad389146c3c3836dcfe9978a9c4c4fd40f"
+  "built_at_commit": "f9ea93f5db8eeef3c378b3dc679bc36d8f88f4a4"
 }
